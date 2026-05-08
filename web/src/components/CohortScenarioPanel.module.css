@@ -1,0 +1,141 @@
+.card {
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(165deg, #eef2ff 0%, #ffffff 55%);
+}
+
+.lead {
+  margin: 0 0 1rem;
+  color: #334155;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.themes {
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.legend {
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.themeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffffee;
+}
+
+.themeCardActive {
+  border-color: var(--bb-primary, #2563eb);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bb-primary, #2563eb) 35%, transparent);
+}
+
+.themePick {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.themeTitle {
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.themeDesc {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.field input,
+.field select {
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+}
+
+.hint {
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.phaseBlock {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px dashed #a5b4fc;
+  background: #f8fafcff;
+}
+
+.phaseBlock h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+}
+
+.phaseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.primary {
+  border-radius: 10px;
+  border: none;
+  padding: 0.55rem 1rem;
+  background: var(--bb-primary, #2563eb);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondary {
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 0.85rem;
+  background: white;
+  font-weight: 700;
+  cursor: pointer;
+}

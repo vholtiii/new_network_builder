@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { createDefaultProject } from '../domain/defaultProject'
 import type { DatasetSchema } from '../domain/datasetSchema'
 import type { Layer } from '../domain/networkGraph'
-import { parseProjectFile, type ProjectFile } from '../domain/projectFile'
+import { parseProjectFile, type CohortScenario, type ProjectFile } from '../domain/projectFile'
 import type { SyntheticRow } from '../domain/synthetic'
 import type { OutcomeRow } from '../domain/simulator'
 
@@ -38,6 +38,7 @@ type ProjectState = {
   updateDatasetSchema: (schema: DatasetSchema) => void
   updateDeclarations: (partial: Partial<ProjectFile['feasibilityDeclarations']>) => void
   updateGeneration: (partial: Partial<ProjectFile['generationSettings']>) => void
+  updateCohortScenario: (partial: Partial<CohortScenario>) => void
   updateTheme: (partial: Partial<ProjectFile['themeTokens']>) => void
   updateTraining: (partial: NonNullable<ProjectFile['training']>) => void
   toggleAiAssist: (enabled: boolean) => void
@@ -98,12 +99,65 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     })),
 
   updateGeneration: (partial) =>
-    set((state) => ({
-      project: {
-        ...state.project,
-        generationSettings: { ...state.project.generationSettings, ...partial },
-      },
-    })),
+    set((state) => {
+      const prevGs = state.project.generationSettings
+      const { cohortScenario: partialCs, ...rest } = partial
+
+      let cohortScenario = prevGs.cohortScenario
+      if (partialCs !== undefined) {
+        cohortScenario = {
+          ...(cohortScenario ?? {}),
+          ...partialCs,
+          ...(partialCs.treatmentPhaseWeights !== undefined
+            ? {
+                treatmentPhaseWeights: {
+                  ...(cohortScenario?.treatmentPhaseWeights ?? {}),
+                  ...partialCs.treatmentPhaseWeights,
+                },
+              }
+            : {}),
+        }
+      }
+
+      const nextGs: ProjectFile['generationSettings'] = {
+        ...prevGs,
+        ...rest,
+        ...(partialCs !== undefined ? { cohortScenario } : {}),
+      }
+
+      return {
+        project: {
+          ...state.project,
+          generationSettings: nextGs,
+        },
+      }
+    }),
+
+  updateCohortScenario: (partial) =>
+    set((state) => {
+      const prev = state.project.generationSettings.cohortScenario ?? {}
+      const merged: CohortScenario = {
+        ...prev,
+        ...partial,
+        ...(partial.treatmentPhaseWeights !== undefined
+          ? {
+              treatmentPhaseWeights: {
+                ...(prev.treatmentPhaseWeights ?? {}),
+                ...partial.treatmentPhaseWeights,
+              },
+            }
+          : {}),
+      }
+      return {
+        project: {
+          ...state.project,
+          generationSettings: {
+            ...state.project.generationSettings,
+            cohortScenario: merged,
+          },
+        },
+      }
+    }),
 
   updateTheme: (partial) =>
     set((state) => ({

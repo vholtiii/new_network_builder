@@ -7,7 +7,11 @@ import { simulateOutcomes } from '../domain/simulator'
 describe('mock outcome simulator', () => {
   it('is reproducible for identical inputs', () => {
     const project = parseProjectFile(minimal)
-    const rows = generateSyntheticRows(project.datasetSchema, 30, 123)
+    const rows = generateSyntheticRows(project.datasetSchema, {
+      ...project.generationSettings,
+      rowCount: 30,
+      seed: 123,
+    })
     const run = () =>
       simulateOutcomes({
         rows,

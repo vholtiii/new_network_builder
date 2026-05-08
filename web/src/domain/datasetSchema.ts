@@ -16,6 +16,10 @@ export const featureGroupSchema = z.enum([
 
 export const columnTypeSchema = z.enum(['numeric', 'categorical', 'binary', 'ordinal'])
 
+export const syntheticRoleEnumSchema = z.enum(['age', 'treatment_phase', 'relapse_or_recurrence', 'site_or_center'])
+
+export const syntheticRoleSchema = syntheticRoleEnumSchema.optional()
+
 export const datasetColumnSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -24,6 +28,7 @@ export const datasetColumnSchema = z.object({
   unit: z.string().optional(),
   codingHint: z.string().optional(),
   group: featureGroupSchema.default('other'),
+  syntheticRole: syntheticRoleSchema,
 })
 
 export const datasetSchemaSchema = z.object({
@@ -32,6 +37,7 @@ export const datasetSchemaSchema = z.object({
 })
 
 export type FeatureGroup = z.infer<typeof featureGroupSchema>
+export type SyntheticRole = z.infer<typeof syntheticRoleEnumSchema>
 export type DatasetColumn = z.infer<typeof datasetColumnSchema>
 export type DatasetSchema = z.infer<typeof datasetSchemaSchema>
 

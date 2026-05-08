@@ -72,9 +72,11 @@ Use **Skip to main content** (visible when you press Tab from the top of the pag
 
 ### 2. Synthetic data
 
+- **Cohort scenario (top of tab):** Pick a **clinical theme** (balanced, relapse-enriched, maintenance-heavy, older adults, young adult). Tune **age band**, **relapse probability** (binary column with cohort role or “relapse” in the name), **labs intensity**, **treatment phase weights** (for your categorical phase column), and **soft vs stratified** phase mixing. Click **Generate X synthetic patients** using the patient count **X** from the slider/presets below. **Live preview** regenerates the cohort on a short debounce when scenario settings change (optional).
+- **Cohort role column:** In the schema table, optionally tag columns as **Age**, **Treatment phase**, **Relapse**, or **Site** so themes attach correctly without renaming ids.
 - Define **columns** (id, display name, **type**, and **group** such as demographics or treatment phase). The group labels help organize the Model builder pickers.
-- Configure how synthetic rows are generated (seed, counts, column roles).
-- Optional **AI assist** can suggest text templates if you run the separate AI proxy (see `README.md`). The app still works if the proxy is off.
+- Configure **seed** and **exact patient count** in **Synthetic cohort generator**; presets jump to common cohort sizes.
+- Optional **AI assist** can suggest schema templates if you run the separate AI proxy (see `README.md`). The app still works if the proxy is off. **Row generation never calls an LLM**—all mock patients are produced offline from your scenario + seed.
 
 ### 3. Mock outcomes
 

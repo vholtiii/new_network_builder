@@ -1,18 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   FEATURE_GROUP_LABELS,
   FEATURE_GROUP_VALUES,
   type DatasetColumn,
   type DatasetSchema,
+  type SyntheticRole,
 } from '../domain/datasetSchema'
 import { parseCsvPaste, rowsToCsv } from '../domain/csv'
 import { generateSyntheticRows } from '../domain/synthetic'
+import type { SyntheticRow } from '../domain/synthetic'
 import { templates } from '../domain/templates'
 import { useProjectStore } from '../store/projectStore'
 import { downloadText } from '../utils/download'
+import { CohortScenarioPanel } from './CohortScenarioPanel'
 import styles from './DataWorkspace.module.css'
 
 const rowPresets = [10, 100, 500, 1000, 5000, 10_000]
+
+const SYNTHETIC_ROLE_OPTIONS: { value: '' | SyntheticRole; label: string }[] = [
+  { value: '', label: '(none)' },
+  { value: 'age', label: 'Age' },
+  { value: 'treatment_phase', label: 'Treatment phase' },
+  { value: 'relapse_or_recurrence', label: 'Relapse / recurrence' },
+  { value: 'site_or_center', label: 'Site / center' },
+]
 
 function coerceImportedRows(schema: DatasetSchema, rows: Record<string, string>[]) {
   return rows.map((row) => {
@@ -30,6 +41,20 @@ function coerceImportedRows(schema: DatasetSchema, rows: Record<string, string>[
   })
 }
 
+function numericSummaries(schema: DatasetSchema, rows: SyntheticRow[], cap = 5000) {
+  const slice = rows.slice(0, cap)
+  return schema.columns
+    .filter((c) => c.type === 'numeric')
+    .map((c) => {
+      const vals = slice.map((r) => Number(r[c.id])).filter((n) => Number.isFinite(n))
+      if (!vals.length) return { id: c.id, name: c.name, min: NaN, max: NaN, mean: NaN }
+      const min = Math.min(...vals)
+      const max = Math.max(...vals)
+      const mean = vals.reduce((a, b) => a + b, 0) / vals.length
+      return { id: c.id, name: c.name, min, max, mean }
+    })
+}
+
 export function DataWorkspace() {
   const project = useProjectStore((s) => s.project)
   const updateDatasetSchema = useProjectStore((s) => s.updateDatasetSchema)
@@ -42,11 +67,37 @@ export function DataWorkspace() {
   const gen = project.generationSettings
   const decl = project.feasibilityDeclarations
 
+  const genSig = useMemo(
+    () =>
+      JSON.stringify({
+        rowCount: gen.rowCount,
+        seed: gen.seed,
+        livePreview: gen.livePreview,
+        cohortScenario: gen.cohortScenario,
+        columnProfiles: gen.columnProfiles,
+      }),
+    [gen.rowCount, gen.seed, gen.livePreview, gen.cohortScenario, gen.columnProfiles],
+  )
+
+  const schemaSig = useMemo(() => JSON.stringify(schema.columns), [schema.columns])
+
+  const regenerate = () => {
+    const rows = generateSyntheticRows(schema, gen)
+    setGeneratedRows(rows)
+  }
+
   useEffect(() => {
-    setGeneratedRows(generateSyntheticRows(schema, gen.rowCount, gen.seed))
-    /* Populate illustration cohort once on mount — refresh via generator controls */
+    regenerate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!gen.livePreview) return
+    const t = window.setTimeout(() => {
+      setGeneratedRows(generateSyntheticRows(schema, gen))
+    }, 350)
+    return () => window.clearTimeout(t)
+  }, [gen.livePreview, genSig, schemaSig, schema, gen, setGeneratedRows])
 
   const addColumn = () => {
     const id = `col_${crypto.randomUUID().slice(0, 8)}`
@@ -79,11 +130,6 @@ export function DataWorkspace() {
     updateDatasetSchema(structuredClone(tpl.schema))
   }
 
-  const regenerate = () => {
-    const rows = generateSyntheticRows(schema, gen.rowCount, gen.seed)
-    setGeneratedRows(rows)
-  }
-
   const handleCsvPaste = (text: string) => {
     const parsed = parseCsvPaste(text)
     const rows = coerceImportedRows(schema, parsed.rows)
@@ -92,6 +138,7 @@ export function DataWorkspace() {
   }
 
   const previewRows = generatedRows.slice(0, 25)
+  const summaries = numericSummaries(schema, generatedRows)
   const [singleDraft, setSingleDraft] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -106,6 +153,8 @@ export function DataWorkspace() {
 
   return (
     <div className={styles.wrap}>
+      <CohortScenarioPanel />
+
       <section className={styles.card}>
         <h3>Dataset schema</h3>
         <label className={styles.field}>
@@ -127,6 +176,7 @@ export function DataWorkspace() {
                 <th>Name</th>
                 <th>Type</th>
                 <th>Group</th>
+                <th>Cohort role</th>
                 <th />
               </tr>
             </thead>
@@ -167,6 +217,23 @@ export function DataWorkspace() {
                     </select>
                   </td>
                   <td>
+                    <select
+                      value={col.syntheticRole ?? ''}
+                      onChange={(e) =>
+                        updateColumn(col.id, {
+                          syntheticRole:
+                            e.target.value === '' ? undefined : (e.target.value as SyntheticRole),
+                        })
+                      }
+                    >
+                      {SYNTHETIC_ROLE_OPTIONS.map((o) => (
+                        <option key={o.value || '_none'} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
                     <button type="button" onClick={() => removeColumn(col.id)}>
                       Remove
                     </button>
@@ -183,6 +250,10 @@ export function DataWorkspace() {
 
       <section className={styles.card}>
         <h3>Synthetic cohort generator</h3>
+        <p className={styles.help}>
+          Set target cohort size here (X patients). Use <strong>Cohort scenario</strong> above for clinical themes and
+          mixes, then click <strong>Generate X synthetic patients</strong> or enable live preview.
+        </p>
         <div className={styles.row}>
           <label className={styles.field}>
             Seed
@@ -230,12 +301,12 @@ export function DataWorkspace() {
         <div className={styles.presets}>
           {rowPresets.map((n) => (
             <button key={n} type="button" onClick={() => updateGeneration({ rowCount: n })}>
-              {n} rows
+              {n} patients
             </button>
           ))}
         </div>
         <label className={styles.field}>
-          Exact row count ({gen.rowCount})
+          Exact patient count (X = {gen.rowCount})
           <input
             type="range"
             min={1}
@@ -300,6 +371,18 @@ export function DataWorkspace() {
 
       <section className={styles.card}>
         <h3>Preview ({previewRows.length} of {generatedRows.length})</h3>
+        {summaries.length > 0 && (
+          <div className={styles.summaryStrip}>
+            <strong>Numeric snapshot</strong> (up to 5k rows):{' '}
+            {summaries.map((s) => (
+              <span key={s.id} className={styles.summaryChip}>
+                {s.name}: min {Number.isFinite(s.min) ? s.min.toFixed(1) : '—'}, max{' '}
+                {Number.isFinite(s.max) ? s.max.toFixed(1) : '—'}, mean{' '}
+                {Number.isFinite(s.mean) ? s.mean.toFixed(2) : '—'}
+              </span>
+            ))}
+          </div>
+        )}
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>

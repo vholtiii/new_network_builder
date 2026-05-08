@@ -11,9 +11,31 @@ export const taskTypeSchema = z.enum([
   'risk_score',
 ])
 
+export const cohortScenarioSchema = z.object({
+  activeThemeId: z.string().optional(),
+  ageRange: z.object({ min: z.number(), max: z.number() }).optional(),
+  treatmentPhaseWeights: z.record(z.string(), z.number()).optional(),
+  relapseProbability: z.number().min(0).max(1).optional(),
+  labsIntensity: z.enum(['low', 'neutral', 'high']).optional(),
+  mixStrictness: z.enum(['soft', 'stratified']).optional(),
+})
+
+export type CohortScenario = z.infer<typeof cohortScenarioSchema>
+
+export const columnGenProfileSchema = z.object({
+  numericMin: z.number().optional(),
+  numericMax: z.number().optional(),
+  numericMode: z.enum(['uniform', 'normal']).optional(),
+})
+
+export type ColumnGenProfile = z.infer<typeof columnGenProfileSchema>
+
 export const generationSettingsSchema = z.object({
   seed: z.number().int(),
   rowCount: z.number().int().min(1).max(100_000),
+  cohortScenario: cohortScenarioSchema.optional(),
+  livePreview: z.boolean().optional(),
+  columnProfiles: z.record(z.string(), columnGenProfileSchema).optional(),
 })
 
 export const feasibilityDeclarationsSchema = z.object({
