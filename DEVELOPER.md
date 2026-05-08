@@ -24,7 +24,14 @@ Key folders:
 - `src/components/*` — presentation + forms.
 - `src/__fixtures__/*.json` — golden JSON used in tests.
 
-## 3. Phase roadmap → code anchors
+## 3. Novice / presentation UX
+
+- **Beginner explanations** (`beginnerMode` in `src/store/projectStore.ts`): adds plain-language intros and collapsible technical blocks in feasibility, palette hints, results context, and presentation helper text. Preference is persisted under the `bb-beginner-mode` localStorage key.
+- **Presentation layout** (`presentationMode`): applies `presentation-mode` on `.app-shell` for slightly roomier header/drawer/diagram spacing—useful when demoing on a projector.
+- **Glossary** (`src/content/glossary.ts`, `src/components/GlossaryDrawer.tsx`): header button opens a modal dialog (Escape closes) with non-clinical definitions.
+- **Landmarks / navigation**: skip link targets `#main-content`; primary workspace tabs expose `aria-current="page"` for the active section.
+
+## 4. Phase roadmap → code anchors
 
 | Phase theme | Primary files |
 |-------------|---------------|
@@ -36,7 +43,7 @@ Key folders:
 | Summary export | `domain/summary.ts`, `PresentationToolbar.tsx` |
 | Optional AI | `api/aiApi.ts`, `components/AiAssistPanel.tsx`, `scripts/ai-proxy.mjs` |
 
-## 4. Getting started
+## 5. Getting started
 
 Requirements: Node 20+ recommended.
 
@@ -51,7 +58,7 @@ npm run ai-proxy   # optional localhost helper (port 8787)
 
 Windows paths with spaces work fine when quoted in PowerShell (`cd "...\web"`).
 
-## 5. Verification checklist (run before merging)
+## 6. Verification checklist (run before merging)
 
 1. `npm run test`
 2. `npm run build`
@@ -61,13 +68,13 @@ Windows paths with spaces work fine when quoted in PowerShell (`cd "...\web"`).
    - Results tab shows acknowledgment gate before first simulation batch.
    - Presentation exports emit non-empty PNG/PDF blobs locally.
 
-## 6. Fixtures & simulations
+## 7. Fixtures & simulations
 
 - Add frozen JSON under `src/__fixtures__/`.
 - Prefer **deterministic seeds** for any randomness (`generationSettings.seed`, simulator XOR constants).
 - When altering `ProjectFile.version`, write migration notes inside `projectFile.ts`.
 
-## 7. Extension cookbook
+## 8. Extension cookbook
 
 ### Add a layer type
 
@@ -90,17 +97,17 @@ Edit `assessFeasibility` (`domain/feasibility.ts`): accumulate structured warnin
 
 Keep sequential assumptions centralized in `shape.ts` + inspector reorder constraints so you can swap in adjacency-list semantics without rewriting feasibility formulas.
 
-## 8. JSON contracts
+## 9. JSON contracts
 
 `parseProjectFile` (`domain/projectFile.ts`) is the import gate. Always bump `PROJECT_FILE_VERSION` when breaking envelopes and snapshot-test migrations.
 
-## 9. Optional AI proxy security expectations
+## 10. Optional AI proxy security expectations
 
 - Run locally or behind authenticated gateways—never expose wide-open proxies on public networks.
 - Do **not** forward patient payloads; the reference proxy ignores persistence intentionally.
 - Surface disclosure when responses originate from LLMs vs templates (`AiAssistPanel` status string).
 
-## 10. Governance for contributors
+## 11. Governance for contributors
 
 - Never paste real patient rows into issues or fixtures.
 - Redact institutional branding screenshots unless cleared.

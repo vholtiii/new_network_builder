@@ -9,6 +9,7 @@ import { exportDiagramPdf, exportDiagramPng } from '../utils/exportDiagram'
 import styles from './PresentationToolbar.module.css'
 
 export function PresentationToolbar({ diagramRef }: { diagramRef: RefObject<HTMLDivElement | null> }) {
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const project = useProjectStore((s) => s.project)
   const updateTheme = useProjectStore((s) => s.updateTheme)
   const [busy, setBusy] = useState(false)
@@ -56,6 +57,12 @@ export function PresentationToolbar({ diagramRef }: { diagramRef: RefObject<HTML
   return (
     <section className={styles.wrap}>
       <h3>Presentation export</h3>
+      {beginnerMode && (
+        <p className={styles.helper}>
+          Use this tab when you want slides-ready assets: freeze the diagram as PNG/PDF and download a short Markdown
+          brief. Theme colors apply to the whole app shell.
+        </p>
+      )}
       <p className={styles.note}>Exports capture the live diagram on the right (hide minimap automatically filtered).</p>
       <div className={styles.actions}>
         <button type="button" disabled={busy} onClick={exportPng}>

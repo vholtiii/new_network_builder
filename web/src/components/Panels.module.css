@@ -22,6 +22,27 @@
   font-size: 0.85rem;
 }
 
+.intro {
+  margin: 0 0 0.75rem;
+  color: #334155;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.detailsBlock {
+  margin-bottom: 0.75rem;
+}
+
+.detailsBlock summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.detailsBlock .summary {
+  margin-top: 0.5rem;
+}
+
 .summary {
   white-space: pre-wrap;
   background: #f8fafc;

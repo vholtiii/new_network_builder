@@ -1,3 +1,10 @@
+.hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
 .palette {
   display: flex;
   flex-wrap: wrap;

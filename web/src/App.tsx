@@ -1,20 +1,26 @@
 import type { ChangeEventHandler } from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AiAssistPanel } from './components/AiAssistPanel'
 import { BuilderSidebar } from './components/BuilderSidebar'
 import { DataWorkspace } from './components/DataWorkspace'
 import { DisclaimerBanner } from './components/DisclaimerBanner'
 import { FeasibilityPanel } from './components/FeasibilityPanel'
+import { GlossaryDrawer } from './components/GlossaryDrawer'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { PresentationToolbar } from './components/PresentationToolbar'
 import { ResultsPanel } from './components/ResultsPanel'
-import { useProjectStore } from './store/projectStore'
+import { workspaceTabLabels } from './content/navLabels'
+import { useProjectStore, type WorkspaceTab } from './store/projectStore'
 import { downloadText } from './utils/download'
 import './AppShell.css'
+
+const tabs: WorkspaceTab[] = ['builder', 'data', 'results', 'present']
 
 export default function App() {
   const diagramRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mainRef = useRef<HTMLElement>(null)
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
 
   const tab = useProjectStore((s) => s.tab)
   const setTab = useProjectStore((s) => s.setTab)
@@ -25,6 +31,10 @@ export default function App() {
   const activeFlowStep = useProjectStore((s) => s.activeFlowStep)
   const selectedLayerId = useProjectStore((s) => s.selectedLayerId)
   const updateNetworkMeta = useProjectStore((s) => s.updateNetworkMeta)
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
+  const setBeginnerMode = useProjectStore((s) => s.setBeginnerMode)
+  const presentationMode = useProjectStore((s) => s.presentationMode)
+  const setPresentationMode = useProjectStore((s) => s.setPresentationMode)
 
   useEffect(() => {
     const root = document.documentElement
@@ -46,8 +56,26 @@ export default function App() {
     event.target.value = ''
   }
 
+  const shellClass = ['app-shell', beginnerMode ? 'beginner-mode' : '', presentationMode ? 'presentation-mode' : '']
+    .filter(Boolean)
+    .join(' ')
+
+  const skipToMain = () => {
+    mainRef.current?.focus()
+  }
+
   return (
-    <div className="app-shell">
+    <div className={shellClass}>
+      <a
+        href="#main-content"
+        className="skip-link"
+        onClick={(e) => {
+          e.preventDefault()
+          skipToMain()
+        }}
+      >
+        Skip to main content
+      </a>
       <DisclaimerBanner />
       <header className="app-header">
         <div>
@@ -62,16 +90,40 @@ export default function App() {
           </label>
         </div>
         <nav className="tab-nav" aria-label="Workspace sections">
-          {(['builder', 'data', 'results', 'present'] as const).map((key) => (
-            <button key={key} type="button" className={tab === key ? 'tab active' : 'tab'} onClick={() => setTab(key)}>
-              {key === 'builder' && 'Model builder'}
-              {key === 'data' && 'Synthetic data'}
-              {key === 'results' && 'Mock outcomes'}
-              {key === 'present' && 'Presentation'}
+          {tabs.map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={tab === key ? 'tab active' : 'tab'}
+              aria-current={tab === key ? 'page' : undefined}
+              onClick={() => setTab(key)}
+            >
+              {workspaceTabLabels[key]}
             </button>
           ))}
         </nav>
         <div className="header-actions">
+          <div className="header-toggles" role="group" aria-label="View options">
+            <button
+              type="button"
+              className="toggle-btn"
+              aria-pressed={beginnerMode}
+              onClick={() => setBeginnerMode(!beginnerMode)}
+            >
+              Beginner explanations
+            </button>
+            <button
+              type="button"
+              className="toggle-btn"
+              aria-pressed={presentationMode}
+              onClick={() => setPresentationMode(!presentationMode)}
+            >
+              Presentation layout
+            </button>
+            <button type="button" className="toggle-btn" onClick={() => setGlossaryOpen(true)}>
+              Open glossary
+            </button>
+          </div>
           <button type="button" onClick={() => downloadText('biobank-nn-project.json', exportProjectJson())}>
             Export JSON project
           </button>
@@ -82,7 +134,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="app-main">
+      <main ref={mainRef} id="main-content" className="app-main" tabIndex={-1}>
         <aside className={`drawer ${tab === 'present' ? 'collapsed' : ''}`}>
           {tab === 'builder' && (
             <>
@@ -99,7 +151,7 @@ export default function App() {
           {tab === 'results' && <ResultsPanel />}
           {tab === 'present' && <PresentationToolbar diagramRef={diagramRef} />}
         </aside>
-        <section className="diagram-pane">
+        <section className="diagram-pane" aria-label="Network diagram">
           <NetworkCanvas
             diagramRef={diagramRef}
             layers={project.network.layers}
@@ -110,6 +162,7 @@ export default function App() {
           />
         </section>
       </main>
+      <GlossaryDrawer open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
     </div>
   )
 }

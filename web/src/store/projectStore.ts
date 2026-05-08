@@ -6,6 +6,19 @@ import { parseProjectFile, type ProjectFile } from '../domain/projectFile'
 import type { SyntheticRow } from '../domain/synthetic'
 import type { OutcomeRow } from '../domain/simulator'
 
+const BEGINNER_MODE_STORAGE_KEY = 'bb-beginner-mode'
+
+function readBeginnerModeFromStorage(): boolean {
+  try {
+    const v = localStorage.getItem(BEGINNER_MODE_STORAGE_KEY)
+    if (v === 'true') return true
+    if (v === 'false') return false
+  } catch {
+    /* ignore */
+  }
+  return false
+}
+
 export type WorkspaceTab = 'builder' | 'data' | 'results' | 'present'
 
 type ProjectState = {
@@ -16,6 +29,7 @@ type ProjectState = {
   outcomes: OutcomeRow[]
   activeFlowStep: number
   presentationMode: boolean
+  beginnerMode: boolean
   predictionsAcknowledged: boolean
   setTab: (tab: WorkspaceTab) => void
   setProject: (project: ProjectFile) => void
@@ -38,6 +52,7 @@ type ProjectState = {
   setOutcomes: (rows: OutcomeRow[]) => void
   setActiveFlowStep: (idx: number) => void
   setPresentationMode: (v: boolean) => void
+  setBeginnerMode: (v: boolean) => void
   acknowledgePredictions: () => void
 }
 
@@ -57,6 +72,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   outcomes: [],
   activeFlowStep: 0,
   presentationMode: false,
+  beginnerMode: readBeginnerModeFromStorage(),
   predictionsAcknowledged: false,
 
   setTab: (tab) => set({ tab }),
@@ -192,6 +208,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setActiveFlowStep: (activeFlowStep) => set({ activeFlowStep }),
 
   setPresentationMode: (presentationMode) => set({ presentationMode }),
+
+  setBeginnerMode: (beginnerMode) => {
+    try {
+      localStorage.setItem(BEGINNER_MODE_STORAGE_KEY, String(beginnerMode))
+    } catch {
+      /* ignore */
+    }
+    set({ beginnerMode })
+  },
 
   acknowledgePredictions: () => set({ predictionsAcknowledged: true }),
 }))

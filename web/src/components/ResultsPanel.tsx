@@ -4,6 +4,7 @@ import { useProjectStore } from '../store/projectStore'
 import styles from './ResultsPanel.module.css'
 
 export function ResultsPanel() {
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const project = useProjectStore((s) => s.project)
   const generatedRows = useProjectStore((s) => s.generatedRows)
   const outcomes = useProjectStore((s) => s.outcomes)
@@ -37,6 +38,12 @@ export function ResultsPanel() {
 
   return (
     <div className={styles.wrap}>
+      {beginnerMode && (
+        <p className={styles.intro}>
+          This tab runs a <strong>separate toy simulator</strong> on your synthetic rows so you can rehearse talking
+          through numbers. It does <strong>not</strong> run the diagram as a trained neural network.
+        </p>
+      )}
       {showGate && (
         <dialog open className={styles.dialog}>
           <h3>Synthetic prediction acknowledgment</h3>

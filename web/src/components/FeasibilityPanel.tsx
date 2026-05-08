@@ -6,6 +6,7 @@ import styles from './Panels.module.css'
 
 export function FeasibilityPanel() {
   const project = useProjectStore((s) => s.project)
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
 
   const report = useMemo(() => {
     const shape = propagateShapes(project.network.layers, project.datasetSchema)
@@ -26,7 +27,21 @@ export function FeasibilityPanel() {
           {report.score}/100 · {report.tier}
         </span>
       </header>
-      <pre className={styles.summary}>{report.summary}</pre>
+      {beginnerMode && (
+        <p className={styles.intro}>
+          This panel scores whether your <strong>sketched</strong> architecture is a reasonable match for your declared
+          dataset size and task. It is a design-time sanity check—not a guarantee your model will perform well after
+          training.
+        </p>
+      )}
+      {beginnerMode ? (
+        <details className={styles.detailsBlock}>
+          <summary>Technical summary (same numbers as before)</summary>
+          <pre className={styles.summary}>{report.summary}</pre>
+        </details>
+      ) : (
+        <pre className={styles.summary}>{report.summary}</pre>
+      )}
       {report.warnings.length > 0 && (
         <div>
           <h3>Warnings</h3>
