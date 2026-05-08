@@ -7,6 +7,7 @@ const DEFAULT_EMBEDDING_DIM = 8
 
 export function CategoricalInputRouting({ dataset }: { dataset: DatasetSchema }) {
   const layers = useProjectStore((s) => s.project.network.layers)
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const addLayer = useProjectStore((s) => s.addLayer)
   const selectLayer = useProjectStore((s) => s.selectLayer)
 
@@ -28,6 +29,12 @@ export function CategoricalInputRouting({ dataset }: { dataset: DatasetSchema })
           No categorical columns in the schema. Add columns typed as <strong>categorical</strong> under Synthetic data to
           route them through embedding layers.
         </p>
+        {beginnerMode && (
+          <p className={styles.helpBeginner}>
+            Pick lists (site, phase labels, etc.) cannot feed straight into the same math block as plain numbers—you add
+            an embedding so each label becomes a short numeric fingerprint the stack can multiply.
+          </p>
+        )}
       </div>
     )
   }
@@ -39,6 +46,12 @@ export function CategoricalInputRouting({ dataset }: { dataset: DatasetSchema })
         Each categorical field needs an <strong>Embedding</strong> block so the network learns a vector per category.
         Embeddings sit in the layer stack (usually right after the Input node).
       </p>
+      {beginnerMode && (
+        <p className={styles.helpBeginner}>
+          Pick lists (site, phase labels, etc.) cannot feed straight into the same math block as plain numbers—you add
+          an embedding so each label becomes a short numeric fingerprint the stack can multiply.
+        </p>
+      )}
       <ul className={styles.list}>
         {categoricals.map((col) => {
           const layerId = embeddingByColumnId.get(col.id)

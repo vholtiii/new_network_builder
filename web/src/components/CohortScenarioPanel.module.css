@@ -13,6 +13,17 @@
   line-height: 1.5;
 }
 
+.helpBeginner {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  color: #0c4a6e;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .themes {
   border: none;
   padding: 0;

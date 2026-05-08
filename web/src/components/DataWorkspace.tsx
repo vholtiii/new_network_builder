@@ -57,6 +57,7 @@ function numericSummaries(schema: DatasetSchema, rows: SyntheticRow[], cap = 500
 
 export function DataWorkspace() {
   const project = useProjectStore((s) => s.project)
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const updateDatasetSchema = useProjectStore((s) => s.updateDatasetSchema)
   const updateGeneration = useProjectStore((s) => s.updateGeneration)
   const updateDeclarations = useProjectStore((s) => s.updateDeclarations)
@@ -157,6 +158,13 @@ export function DataWorkspace() {
 
       <section className={styles.card}>
         <h3>Dataset schema</h3>
+        {beginnerMode && (
+          <p className={styles.helpBeginner}>
+            <strong>Cohort role</strong> tells the synthetic generator which column stands for age, relapse, treatment
+            phase, or site—it shapes mock patients only. It does not train the neural network; wiring real inputs still
+            happens under Model builder (scalar checkboxes and categorical embeddings).
+          </p>
+        )}
         <label className={styles.field}>
           Template
           <select defaultValue="" onChange={(e) => e.target.value && applyTemplate(e.target.value)}>

@@ -30,6 +30,7 @@ function hasRelapseColumn(schema: DatasetSchema): boolean {
 export function CohortScenarioPanel() {
   const schema = useProjectStore((s) => s.project.datasetSchema)
   const gen = useProjectStore((s) => s.project.generationSettings)
+  const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const updateCohortScenario = useProjectStore((s) => s.updateCohortScenario)
   const updateGeneration = useProjectStore((s) => s.updateGeneration)
 
@@ -64,6 +65,15 @@ export function CohortScenarioPanel() {
         Pick a clinical theme, tune ranges and mixes, then generate <strong>{gen.rowCount}</strong> synthetic patients.
         All draws are seeded for reproducibility (change seed for a new draw).
       </p>
+      {beginnerMode && (
+        <p className={styles.helpBeginner}>
+          Themes bundle sensible defaults—like preset sliders—for fake patient mixes (age spread, relapse chance, lab
+          volatility). The <strong>seed</strong> is the dice-roll recipe: same seed → same fake rows; shuffle or edit it
+          for a fresh cohort. <strong>Labs intensity</strong> controls how jumpy numeric lab-like columns look.{' '}
+          <strong>Phase mix mode</strong>: soft draws phases loosely from weights; stratified forces cohort-wide
+          proportions to match those weights more tightly.
+        </p>
+      )}
 
       <fieldset className={styles.themes}>
         <legend className={styles.legend}>Theme</legend>
