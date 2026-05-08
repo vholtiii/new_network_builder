@@ -14,6 +14,7 @@ import {
 import type { DatasetSchema } from '../domain/datasetSchema'
 import type { Layer } from '../domain/networkGraph'
 import { propagateShapes } from '../domain/shape'
+import { buildInputLayerTooltip } from './inputTooltip'
 import { LayerNode } from './LayerNode'
 
 const nodeTypes = { layer: LayerNode }
@@ -50,11 +51,15 @@ function FlowDiagramInner({
         layer,
         trace: traces[idx],
         active: idx === activeStep,
+        inputTooltip:
+          layer.type === 'input'
+            ? buildInputLayerTooltip(datasetSchema, layer.scalarColumnIds)
+            : undefined,
       },
       selected: layer.id === selectedLayerId,
       draggable: false,
     }))
-  }, [layers, traces, activeStep, selectedLayerId])
+  }, [layers, traces, activeStep, selectedLayerId, datasetSchema])
 
   const initialEdges = useMemo(() => {
     const edges = []

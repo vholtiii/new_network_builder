@@ -7,6 +7,8 @@ export type LayerNodeData = {
   layer: Layer
   trace?: LayerShapeTrace
   active?: boolean
+  /** Tooltip listing scalar features wired into the Input node (names). */
+  inputTooltip?: string
 }
 
 export type LayerNodeType = Node<LayerNodeData, 'layer'>
@@ -21,7 +23,7 @@ export function LayerNode({ data, selected }: NodeProps<LayerNodeType>) {
     .join(' ')
 
   return (
-    <div className={cls}>
+    <div className={cls} title={data.inputTooltip}>
       <Handle type="target" position={Position.Left} />
       <div className={styles.title}>{title}</div>
       <div className={styles.meta}>{dims}</div>

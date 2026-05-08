@@ -21,6 +21,12 @@ The BioBank Neural Network Builder is a **browser-based design tool**. You use i
 
 The red/black banner at the top of the app repeats this in short form.
 
+## Wiring inputs at a glance
+
+1. **Synthetic data tab:** Add columns and assign **types**. Numeric/binary/ordinal columns can be wired as **scalars** on the Model builder. **Categorical** columns (sites, phases, etc.) use **embeddings** instead.
+2. **Model builder:** Use **Features that feed the Input node** for scalars (grouped by demographics, labs, treatment phase…). Use **Categorical inputs** to confirm each categorical column has an embedding layer, or add one with a single click.
+3. **Diagram:** Hover the **Input** node to see the selected scalar feature names in a tooltip.
+
 ---
 
 ## Running the app on your computer
@@ -58,12 +64,15 @@ Use **Skip to main content** (visible when you press Tab from the top of the pag
 
 - **Architecture title:** Rename your design (helpful when exporting).
 - **Layer palette (`+ Dense`, `+ Dropout`, etc.):** Adds layers **above** the fixed output layer. Hover buttons for short hints.
-- **Scalar input channels:** Choose which dataset columns feed the **Input** layer as numeric inputs.
+- **Features that feed the Input node:** Check which **numeric**, **binary**, and **ordinal** columns from your dataset plug into the **Input** layer on the diagram. Fields are **grouped by category** (demographics, labs, treatment phase, etc.) so it is clear what kind of signal each checkbox represents. Turn on **Beginner explanations** in the header for extra context.
+- **Categorical inputs:** Lists each **categorical** schema column (e.g. site, phase). Each one needs an **Embedding** layer in the stack—the UI shows **In network** when one exists, or a one-click **Add embedding** button when it does not.
+- **Synthetic data tab:** Use the button link inside the scalar checklist to jump there when you need to **add/rename columns** or change **feature groups**.
 - **Visual forward-pass scrubber:** Moves the highlight along the diagram to show forward flow (visual aid only).
 - **Feasibility screening:** Score and warnings. With **Beginner explanations** on, you get plain-language intro text and can expand **Technical summary** for the same numbers as before.
 
 ### 2. Synthetic data
 
+- Define **columns** (id, display name, **type**, and **group** such as demographics or treatment phase). The group labels help organize the Model builder pickers.
 - Configure how synthetic rows are generated (seed, counts, column roles).
 - Optional **AI assist** can suggest text templates if you run the separate AI proxy (see `README.md`). The app still works if the proxy is off.
 

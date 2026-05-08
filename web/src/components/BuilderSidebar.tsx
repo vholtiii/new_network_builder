@@ -1,4 +1,5 @@
 import { useProjectStore } from '../store/projectStore'
+import { CategoricalInputRouting } from './CategoricalInputRouting'
 import { LayerInspector } from './LayerInspector'
 import { LayerPalette } from './LayerPalette'
 import { ScalarInputPicker } from './ScalarInputPicker'
@@ -31,6 +32,7 @@ export function BuilderSidebar() {
         </button>
       </div>
       <ScalarInputPicker dataset={project.datasetSchema} />
+      <CategoricalInputRouting dataset={project.datasetSchema} />
       <label className={styles.slider}>
         Visual forward-pass scrubber
         <input

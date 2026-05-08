@@ -55,4 +55,11 @@ describe('App shell', () => {
     expect(builder).toHaveAttribute('aria-current', 'page')
     expect(data).not.toHaveAttribute('aria-current')
   })
+
+  it('groups scalar inputs under feature group headings', () => {
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'Demographics', level: 5 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Labs', level: 5 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Features that feed the Input node', level: 4 })).toBeInTheDocument()
+  })
 })

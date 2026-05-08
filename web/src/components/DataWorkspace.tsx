@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { FEATURE_GROUP_VALUES, type DatasetColumn, type DatasetSchema } from '../domain/datasetSchema'
+import {
+  FEATURE_GROUP_LABELS,
+  FEATURE_GROUP_VALUES,
+  type DatasetColumn,
+  type DatasetSchema,
+} from '../domain/datasetSchema'
 import { parseCsvPaste, rowsToCsv } from '../domain/csv'
 import { generateSyntheticRows } from '../domain/synthetic'
 import { templates } from '../domain/templates'
@@ -156,7 +161,7 @@ export function DataWorkspace() {
                     >
                       {FEATURE_GROUP_VALUES.map((g) => (
                         <option key={g} value={g}>
-                          {g}
+                          {FEATURE_GROUP_LABELS[g]}
                         </option>
                       ))}
                     </select>

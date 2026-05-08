@@ -48,3 +48,22 @@ export const FEATURE_GROUP_VALUES: FeatureGroup[] = [
   'treatment_phase',
   'other',
 ]
+
+/** Short labels for schema UI (dataset editor + builder). */
+export const FEATURE_GROUP_LABELS: Record<FeatureGroup, string> = {
+  demographics: 'Demographics',
+  diagnosis: 'Diagnosis',
+  clinical_history: 'Clinical history',
+  medication: 'Medication',
+  labs: 'Labs',
+  pgx: 'Pharmacogenomics',
+  methylation: 'Methylation',
+  trauma: 'Trauma',
+  outcomes: 'Outcomes',
+  treatment_phase: 'Treatment phase',
+  other: 'Other',
+}
+
+export function featureGroupLabel(group: FeatureGroup): string {
+  return FEATURE_GROUP_LABELS[group]
+}
