@@ -27,6 +27,8 @@ npm run ai-proxy
 
 Then enable **AI assist** in the Synthetic data tab and (optionally) add `VITE_AI_PROXY_URL=http://localhost:8787` to `web/.env.local`.
 
+For plain-language usage instructions and what the app does (and does not do), see **[USER_GUIDE.md](USER_GUIDE.md)**.
+
 ## Repository layout
 
 | Path | Purpose |
