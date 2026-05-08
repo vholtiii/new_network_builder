@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "datasetSchema": {
+    "columns": [
+      { "id": "age", "name": "Age", "type": "numeric", "group": "demographics" },
+      { "id": "lab", "name": "Lab", "type": "numeric", "group": "labs" },
+      {
+        "id": "site",
+        "name": "Site",
+        "type": "categorical",
+        "categories": ["A", "B"],
+        "group": "demographics"
+      }
+    ]
+  },
+  "generationSettings": { "seed": 7, "rowCount": 10 },
+  "feasibilityDeclarations": {
+    "sampleSize": 200,
+    "taskType": "binary_classification",
+    "interpretabilityPriority": "medium",
+    "externalValidationPlanned": true
+  },
+  "themeTokens": {
+    "primary": "#2563eb",
+    "secondary": "#0f172a",
+    "accent": "#38bdf8",
+    "background": "#ffffff",
+    "foreground": "#0f172a"
+  },
+  "network": {
+    "layers": [
+      { "id": "in", "type": "input", "scalarColumnIds": ["age", "lab"] },
+      { "id": "emb", "type": "embedding", "schemaColumnId": "site", "embeddingDim": 4 },
+      { "id": "h1", "type": "dense", "units": 8 },
+      { "id": "a1", "type": "activation", "fn": "relu" },
+      { "id": "out", "type": "output", "units": 1, "activationFn": "sigmoid" }
+    ]
+  }
+}

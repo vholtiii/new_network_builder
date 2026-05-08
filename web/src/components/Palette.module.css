@@ -1,0 +1,19 @@
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.palette button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.palette button:hover {
+  background: #bae6fd;
+}

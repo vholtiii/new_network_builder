@@ -1,0 +1,31 @@
+.panel {
+  border: 1px solid #cbd5f5;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chip {
+  background: #dbeafe;
+  color: #1e3a8a;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.summary {
+  white-space: pre-wrap;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}

@@ -1,0 +1,8 @@
+.banner {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  border-bottom: 2px solid #dc2626;
+}

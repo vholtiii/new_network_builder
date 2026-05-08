@@ -1,0 +1,321 @@
+import { useEffect, useState } from 'react'
+import { FEATURE_GROUP_VALUES, type DatasetColumn, type DatasetSchema } from '../domain/datasetSchema'
+import { parseCsvPaste, rowsToCsv } from '../domain/csv'
+import { generateSyntheticRows } from '../domain/synthetic'
+import { templates } from '../domain/templates'
+import { useProjectStore } from '../store/projectStore'
+import { downloadText } from '../utils/download'
+import styles from './DataWorkspace.module.css'
+
+const rowPresets = [10, 100, 500, 1000, 5000, 10_000]
+
+function coerceImportedRows(schema: DatasetSchema, rows: Record<string, string>[]) {
+  return rows.map((row) => {
+    const out: Record<string, string | number> = {}
+    for (const col of schema.columns) {
+      const raw = row[col.id] ?? ''
+      if (col.type === 'numeric' || col.type === 'ordinal' || col.type === 'binary') {
+        const n = Number(raw)
+        out[col.id] = Number.isFinite(n) ? n : 0
+      } else {
+        out[col.id] = raw
+      }
+    }
+    return out
+  })
+}
+
+export function DataWorkspace() {
+  const project = useProjectStore((s) => s.project)
+  const updateDatasetSchema = useProjectStore((s) => s.updateDatasetSchema)
+  const updateGeneration = useProjectStore((s) => s.updateGeneration)
+  const updateDeclarations = useProjectStore((s) => s.updateDeclarations)
+  const setGeneratedRows = useProjectStore((s) => s.setGeneratedRows)
+  const generatedRows = useProjectStore((s) => s.generatedRows)
+
+  const schema = project.datasetSchema
+  const gen = project.generationSettings
+  const decl = project.feasibilityDeclarations
+
+  useEffect(() => {
+    setGeneratedRows(generateSyntheticRows(schema, gen.rowCount, gen.seed))
+    /* Populate illustration cohort once on mount — refresh via generator controls */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const addColumn = () => {
+    const id = `col_${crypto.randomUUID().slice(0, 8)}`
+    const column: DatasetColumn = {
+      id,
+      name: 'New column',
+      type: 'numeric',
+      group: 'other',
+    }
+    updateDatasetSchema({ ...schema, columns: [...schema.columns, column] })
+  }
+
+  const updateColumn = (id: string, partial: Partial<DatasetColumn>) => {
+    updateDatasetSchema({
+      ...schema,
+      columns: schema.columns.map((c) => (c.id === id ? { ...c, ...partial } : c)),
+    })
+  }
+
+  const removeColumn = (id: string) => {
+    updateDatasetSchema({
+      ...schema,
+      columns: schema.columns.filter((c) => c.id !== id),
+    })
+  }
+
+  const applyTemplate = (templateId: string) => {
+    const tpl = templates.find((t) => t.id === templateId)
+    if (!tpl) return
+    updateDatasetSchema(structuredClone(tpl.schema))
+  }
+
+  const regenerate = () => {
+    const rows = generateSyntheticRows(schema, gen.rowCount, gen.seed)
+    setGeneratedRows(rows)
+  }
+
+  const handleCsvPaste = (text: string) => {
+    const parsed = parseCsvPaste(text)
+    const rows = coerceImportedRows(schema, parsed.rows)
+    setGeneratedRows(rows)
+    updateGeneration({ rowCount: rows.length })
+  }
+
+  const previewRows = generatedRows.slice(0, 25)
+  const [singleDraft, setSingleDraft] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    setSingleDraft((prev) => {
+      const next: Record<string, string> = {}
+      for (const col of schema.columns) {
+        next[col.id] = prev[col.id] ?? ''
+      }
+      return next
+    })
+  }, [schema.columns])
+
+  return (
+    <div className={styles.wrap}>
+      <section className={styles.card}>
+        <h3>Dataset schema</h3>
+        <label className={styles.field}>
+          Template
+          <select defaultValue="" onChange={(e) => e.target.value && applyTemplate(e.target.value)}>
+            <option value="">Load starter template…</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Group</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {schema.columns.map((col) => (
+                <tr key={col.id}>
+                  <td>
+                    <input value={col.id} onChange={(e) => updateColumn(col.id, { id: e.target.value })} />
+                  </td>
+                  <td>
+                    <input value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} />
+                  </td>
+                  <td>
+                    <select
+                      value={col.type}
+                      onChange={(e) =>
+                        updateColumn(col.id, { type: e.target.value as DatasetColumn['type'] })
+                      }
+                    >
+                      <option value="numeric">numeric</option>
+                      <option value="binary">binary</option>
+                      <option value="ordinal">ordinal</option>
+                      <option value="categorical">categorical</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={col.group}
+                      onChange={(e) =>
+                        updateColumn(col.id, { group: e.target.value as DatasetColumn['group'] })
+                      }
+                    >
+                      {FEATURE_GROUP_VALUES.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <button type="button" onClick={() => removeColumn(col.id)}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button type="button" onClick={addColumn}>
+          Add column
+        </button>
+      </section>
+
+      <section className={styles.card}>
+        <h3>Synthetic cohort generator</h3>
+        <div className={styles.row}>
+          <label className={styles.field}>
+            Seed
+            <input
+              type="number"
+              value={gen.seed}
+              onChange={(e) => updateGeneration({ seed: Number(e.target.value) })}
+            />
+          </label>
+          <label className={styles.field}>
+            Declared sample size (feasibility)
+            <input
+              type="number"
+              min={1}
+              value={decl.sampleSize}
+              onChange={(e) => updateDeclarations({ sampleSize: Number(e.target.value) })}
+            />
+          </label>
+          <label className={styles.field}>
+            Task type
+            <select
+              value={decl.taskType}
+              onChange={(e) =>
+                updateDeclarations({
+                  taskType: e.target.value as typeof decl.taskType,
+                })
+              }
+            >
+              <option value="binary_classification">binary_classification</option>
+              <option value="multiclass_classification">multiclass_classification</option>
+              <option value="regression">regression</option>
+              <option value="risk_score">risk_score</option>
+            </select>
+          </label>
+          <label className={styles.field}>
+            Multiclass K
+            <input
+              type="number"
+              min={2}
+              value={decl.multiclassCount ?? 3}
+              onChange={(e) => updateDeclarations({ multiclassCount: Number(e.target.value) })}
+            />
+          </label>
+        </div>
+        <div className={styles.presets}>
+          {rowPresets.map((n) => (
+            <button key={n} type="button" onClick={() => updateGeneration({ rowCount: n })}>
+              {n} rows
+            </button>
+          ))}
+        </div>
+        <label className={styles.field}>
+          Exact row count ({gen.rowCount})
+          <input
+            type="range"
+            min={1}
+            max={10000}
+            step={1}
+            value={Math.min(gen.rowCount, 10000)}
+            onChange={(e) => updateGeneration({ rowCount: Number(e.target.value) })}
+          />
+        </label>
+        <div className={styles.actions}>
+          <button type="button" onClick={regenerate}>
+            Generate / refresh synthetic rows
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadText('synthetic-cohort.csv', rowsToCsv(generatedRows, schema), 'text/csv')}
+          >
+            Download CSV
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.card}>
+        <h3>CSV paste fallback</h3>
+        <textarea
+          className={styles.textarea}
+          placeholder="Paste CSV with header row matching schema column ids"
+          onBlur={(e) => e.target.value.trim() && handleCsvPaste(e.target.value)}
+        />
+      </section>
+
+      <section className={styles.card}>
+        <h3>Single-row illustrative capture</h3>
+        <p className={styles.help}>Useful for podium demos — appends one coerced row to the in-memory cohort.</p>
+        <div className={styles.row}>
+          {schema.columns.map((col) => (
+            <label key={col.id} className={styles.field}>
+              {col.name}
+              <input
+                type="text"
+                value={singleDraft[col.id] ?? ''}
+                onChange={(e) => setSingleDraft((draft) => ({ ...draft, [col.id]: e.target.value }))}
+              />
+            </label>
+          ))}
+        </div>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={() => {
+              const pseudoCsvRow = Object.fromEntries(schema.columns.map((c) => [c.id, singleDraft[c.id] ?? '']))
+              const appended = coerceImportedRows(schema, [pseudoCsvRow])[0]
+              const next = [...generatedRows, appended]
+              setGeneratedRows(next)
+              updateGeneration({ rowCount: next.length })
+            }}
+          >
+            Append single synthetic row
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.card}>
+        <h3>Preview ({previewRows.length} of {generatedRows.length})</h3>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                {schema.columns.map((c) => (
+                  <th key={c.id}>{c.id}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {previewRows.map((row, idx) => (
+                <tr key={idx}>
+                  {schema.columns.map((c) => (
+                    <td key={c.id}>{String(row[c.id] ?? '')}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  )
+}
