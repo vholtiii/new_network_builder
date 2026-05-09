@@ -44,7 +44,7 @@ Turn on **Guided presentation steps** in the header for a **linear 5-step flow**
 | Step | Requirements to continue |
 |------|-------------------------|
 | 1 | Architecture title, patient count ≥ 1, at least one dataset column |
-| 2 | Generate cohort rows (Generate buttons, CSV paste, append row, or Live preview refresh) |
+| 2 | Confirm cohort generation (Generate buttons, CSV paste, append row, or Live preview refresh—the preview table already updates automatically when you change settings) |
 | 3 | Input scalars selected; every categorical column has an embedding |
 | 4 | Apply a hidden-layer preset **or** keep at least one Dense layer before the output |
 | 5 | Review the feasibility snapshot on the Presentation tab and tick the confirmation checkbox |
@@ -117,9 +117,11 @@ The red/black banner at the top of the app repeats this in short form.
 ### Cohort builder
 
 - **Presentation cohort:** Toggle slide-friendly fields (age, sex, site / center, treatment phases, relapse). Stable column ids sync with the generator; **Suggest model wiring** adds scalars and embeddings on the diagram when those columns exist.
-- **Cohort scenario:** Pick a **clinical theme**, tune age band, **relapse probability**, **sex = 1 probability** (binary sex columns only), **labs intensity**, **treatment phase weights**, and **soft vs stratified** mixing. **Generate X synthetic patients** uses the count **X** from the generator section. **Live preview** optionally refreshes rows after edits (debounced).
+- **Cohort scenario:** Pick a **clinical theme**, tune age band, **relapse probability**, **sex = 1 probability** (binary sex columns only), **labs intensity**, **treatment phase weights**, and **soft vs stratified** mixing. **Generate X synthetic patients** uses the count **X** from the generator section.
+- **Preview refresh:** The cohort **preview table** (and numeric snapshot) **updates automatically** a moment after you change the dataset schema, patient count, seed, cohort scenario, or column profiles—you do **not** need Live preview on for the numbers to stay in sync.
+- **Live preview (wizard confirmation):** When **on**, each debounced refresh also satisfies **Guided presentation steps → Generate cohort rows**. Explicit **Generate** buttons, CSV paste, or **Append single synthetic row** always count too.
 - **Cohort role:** In the schema table, tag **Age**, **Treatment phase**, **Relapse**, or **Site** so themes line up without renaming column ids.
-- **Dataset schema:** Columns have **id**, **name**, **type**, and **group** (used to organize Model builder).
+- **Dataset schema:** Columns have **id** (commit renames when you leave the field—ids stay aligned with the diagram’s Input and Embedding wiring), **name**, **type**, **group**, and for **categorical** columns a **Categories** box (one label per line). Empty column names are rejected.
 - **Synthetic cohort generator:** **Seed**, **exact patient count**, presets, and **Declared sample size** for feasibility.
 - **AI assist:** Optional templates if you run the AI proxy (see **README.md**). **Row generation does not call an LLM**—mock rows come from your scenario and seed offline.
 

@@ -61,6 +61,23 @@
   padding: 0.35rem;
 }
 
+.categoriesTextarea {
+  width: 100%;
+  min-width: 7rem;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.mutedDash {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
 .presets {
   display: flex;
   flex-wrap: wrap;

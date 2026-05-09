@@ -9,6 +9,7 @@ import {
   type WizardStepIndex,
 } from '../domain/guidedWizard'
 import type { Layer } from '../domain/networkGraph'
+import { renameDatasetColumnInProject } from '../domain/datasetSchemaRename'
 import { parseProjectFile, type CohortScenario, type ProjectFile } from '../domain/projectFile'
 import type { SyntheticRow } from '../domain/synthetic'
 import type { OutcomeRow } from '../domain/simulator'
@@ -59,6 +60,8 @@ type ProjectState = {
   importFromJsonText: (json: string) => void
   exportProjectJson: () => string
   updateDatasetSchema: (schema: DatasetSchema) => void
+  /** Returns false if the new id is invalid or collides with another column. */
+  renameDatasetColumnId: (oldId: string, newId: string) => boolean
   updateDeclarations: (partial: Partial<ProjectFile['feasibilityDeclarations']>) => void
   updateGeneration: (partial: Partial<ProjectFile['generationSettings']>) => void
   updateCohortScenario: (partial: Partial<CohortScenario>) => void
@@ -134,6 +137,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   updateDatasetSchema: (datasetSchema) =>
     set((state) => ({ project: { ...state.project, datasetSchema } })),
+
+  renameDatasetColumnId: (oldId, newId) => {
+    const state = get()
+    const r = renameDatasetColumnInProject(state.project, oldId, newId)
+    if (!r.ok) return false
+    if (r.project !== state.project) {
+      set({ project: r.project })
+    }
+    return true
+  },
 
   updateDeclarations: (partial) =>
     set((state) => ({

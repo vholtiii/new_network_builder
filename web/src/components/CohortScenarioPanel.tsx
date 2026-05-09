@@ -195,7 +195,7 @@ export function CohortScenarioPanel() {
         </label>
 
         <label className={styles.field}>
-          Live preview
+          Live preview (wizard confirmation)
           <select
             value={gen.livePreview ? 'on' : 'off'}
             onChange={(e) => updateGeneration({ livePreview: e.target.value === 'on' })}
@@ -203,6 +203,10 @@ export function CohortScenarioPanel() {
             <option value="off">Off</option>
             <option value="on">On (debounced)</option>
           </select>
+          <span className={styles.hint}>
+            The cohort table already updates automatically when schema or generation settings change; with Live preview
+            on, each debounced refresh also satisfies the guided wizard “Generate cohort rows” step.
+          </span>
         </label>
       </div>
 

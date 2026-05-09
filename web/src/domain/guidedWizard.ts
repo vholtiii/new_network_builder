@@ -150,7 +150,7 @@ export function validateWizardStep(
     case 1: {
       if (!ctx.cohortGenerateAck) {
         messages.push(
-          'Generate synthetic cohort rows (Cohort scenario “Generate”, Synthetic cohort generator “Generate / refresh”, CSV paste, or turn on Live preview)',
+          'Confirm cohort generation for this wizard step: click Generate in Cohort scenario or Synthetic cohort generator, paste CSV, append a demo row, or turn on Live preview (preview rows already refresh automatically when settings change).',
         )
       }
       break

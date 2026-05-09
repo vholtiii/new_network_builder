@@ -38,7 +38,7 @@ Key folders:
 | Contracts | `domain/projectFile.ts`, `domain/networkGraph.ts`, `domain/datasetSchema.ts` |
 | Shape engine | `domain/shape.ts` |
 | Feasibility | `domain/feasibility.ts` |
-| Synthetic data | `domain/synthetic.ts`, `domain/templates.ts`, `domain/csv.ts` |
+| Synthetic data | `domain/synthetic.ts`, `domain/templates.ts`, `domain/csv.ts`, `domain/datasetSchemaRename.ts` |
 | Mock outcomes | `domain/simulator.ts` |
 | Summary export | `domain/summary.ts`, `PresentationToolbar.tsx` |
 | Optional AI | `api/aiApi.ts`, `components/AiAssistPanel.tsx`, `scripts/ai-proxy.mjs` |
@@ -64,7 +64,7 @@ Windows paths with spaces work fine when quoted in PowerShell (`cd "...\web"`).
 2. `npm run build`
 3. Spot-check UI flows:
    - Builder tab edits propagate through feasibility panel.
-   - Synthetic data regeneration preserves deterministic seeds.
+   - Synthetic data regeneration preserves deterministic seeds; cohort preview stays aligned with schema/settings (debounced regen in `DataWorkspace.tsx`).
    - Results tab shows acknowledgment gate before first simulation batch.
    - Presentation exports emit non-empty PNG/PDF blobs locally.
 
@@ -92,6 +92,12 @@ Edit `assessFeasibility` (`domain/feasibility.ts`): accumulate structured warnin
 
 1. Extend `columnTypeSchema` / UI selects inside `DataWorkspace.tsx`.
 2. Update `generateSyntheticRows` and CSV coercion helpers.
+3. If ids participate in the graph, extend `renameDatasetColumnInProject` (`domain/datasetSchemaRename.ts`) and wire through `projectStore.renameDatasetColumnId` so Input scalars, embeddings, and `generationSettings.columnProfiles` keys remap together.
+
+### Cohort preview and wizard ack
+
+- `DataWorkspace` debounces regeneration (~350ms) whenever schema columns or generation settings (row count, seed, cohort scenario, column profiles) change; **Live preview** only gates whether each refresh calls `acknowledgeCohortGeneration` for guided step 2.
+- Vitest: `src/DataWorkspace.test.tsx`, `src/domain/datasetSchemaRename.test.ts`.
 
 ### Planning DAG support later
 

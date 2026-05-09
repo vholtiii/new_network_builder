@@ -1,11 +1,24 @@
-# React + TypeScript + Vite
+# BioBank Neural Network Builder — web client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vite + React + TypeScript UI for the project in the repository root.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev    # local dev server
+npm run test
+npm run build
+```
+
+## Docs
+
+- Usage and disclaimers: **[../USER_GUIDE.md](../USER_GUIDE.md)**
+- Architecture and contributing: **[../DEVELOPER.md](../DEVELOPER.md)**
+
+The sections below are upstream Vite template notes (ESLint expansion, React Compiler).
+
+---
 
 ## React Compiler
 

@@ -57,10 +57,15 @@ function numericSummaries(schema: DatasetSchema, rows: SyntheticRow[], cap = 500
     })
 }
 
+function defaultCategories(): string[] {
+  return ['A', 'B', 'C']
+}
+
 export function DataWorkspace() {
   const project = useProjectStore((s) => s.project)
   const beginnerMode = useProjectStore((s) => s.beginnerMode)
   const updateDatasetSchema = useProjectStore((s) => s.updateDatasetSchema)
+  const renameDatasetColumnId = useProjectStore((s) => s.renameDatasetColumnId)
   const updateGeneration = useProjectStore((s) => s.updateGeneration)
   const updateDeclarations = useProjectStore((s) => s.updateDeclarations)
   const setGeneratedRows = useProjectStore((s) => s.setGeneratedRows)
@@ -71,19 +76,30 @@ export function DataWorkspace() {
   const gen = project.generationSettings
   const decl = project.feasibilityDeclarations
 
-  const genSig = useMemo(
+  const regenSig = useMemo(
     () =>
       JSON.stringify({
         rowCount: gen.rowCount,
         seed: gen.seed,
-        livePreview: gen.livePreview,
         cohortScenario: gen.cohortScenario,
         columnProfiles: gen.columnProfiles,
       }),
-    [gen.rowCount, gen.seed, gen.livePreview, gen.cohortScenario, gen.columnProfiles],
+    [gen.rowCount, gen.seed, gen.cohortScenario, gen.columnProfiles],
   )
 
   const schemaSig = useMemo(() => JSON.stringify(schema.columns), [schema.columns])
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const { project: p } = useProjectStore.getState()
+      const rows = generateSyntheticRows(p.datasetSchema, p.generationSettings)
+      useProjectStore.getState().setGeneratedRows(rows)
+      if (p.generationSettings.livePreview) {
+        useProjectStore.getState().acknowledgeCohortGeneration()
+      }
+    }, 350)
+    return () => window.clearTimeout(t)
+  }, [regenSig, schemaSig, gen.livePreview])
 
   const regenerate = (acknowledge = false) => {
     const rows = generateSyntheticRows(schema, gen)
@@ -91,19 +107,19 @@ export function DataWorkspace() {
     if (acknowledge) acknowledgeCohortGeneration()
   }
 
-  useEffect(() => {
-    regenerate()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (!gen.livePreview) return
-    const t = window.setTimeout(() => {
-      setGeneratedRows(generateSyntheticRows(schema, gen))
-      acknowledgeCohortGeneration()
-    }, 350)
-    return () => window.clearTimeout(t)
-  }, [gen.livePreview, genSig, schemaSig, schema, gen, setGeneratedRows, acknowledgeCohortGeneration])
+  const commitColumnId = (stableId: string, raw: string, inputEl: HTMLInputElement) => {
+    const trimmed = raw.trim()
+    if (!trimmed) {
+      window.alert('Column id cannot be empty.')
+      inputEl.value = stableId
+      return
+    }
+    if (trimmed === stableId) return
+    if (!renameDatasetColumnId(stableId, trimmed)) {
+      window.alert('That column id is already in use.')
+      inputEl.value = stableId
+    }
+  }
 
   const addColumn = () => {
     const id = `col_${crypto.randomUUID().slice(0, 8)}`
@@ -117,6 +133,10 @@ export function DataWorkspace() {
   }
 
   const updateColumn = (id: string, partial: Partial<DatasetColumn>) => {
+    if (partial.name !== undefined && !partial.name.trim()) {
+      window.alert('Column name cannot be empty.')
+      return
+    }
     updateDatasetSchema({
       ...schema,
       columns: schema.columns.map((c) => (c.id === id ? { ...c, ...partial } : c)),
@@ -147,6 +167,7 @@ export function DataWorkspace() {
   const previewRows = generatedRows.slice(0, 25)
   const summaries = numericSummaries(schema, generatedRows)
   const [singleDraft, setSingleDraft] = useState<Record<string, string>>({})
+  const [templatePick, setTemplatePick] = useState('')
 
   useEffect(() => {
     setSingleDraft((prev) => {
@@ -174,7 +195,16 @@ export function DataWorkspace() {
         )}
         <label className={styles.field}>
           Template
-          <select defaultValue="" onChange={(e) => e.target.value && applyTemplate(e.target.value)}>
+          <select
+            value={templatePick}
+            onChange={(e) => {
+              const v = e.target.value
+              if (v) {
+                applyTemplate(v)
+                setTemplatePick('')
+              }
+            }}
+          >
             <option value="">Load starter template…</option>
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
@@ -190,6 +220,7 @@ export function DataWorkspace() {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Categories</th>
                 <th>Group</th>
                 <th>Cohort role</th>
                 <th />
@@ -199,7 +230,11 @@ export function DataWorkspace() {
               {schema.columns.map((col) => (
                 <tr key={col.id}>
                   <td>
-                    <input value={col.id} onChange={(e) => updateColumn(col.id, { id: e.target.value })} />
+                    <input
+                      defaultValue={col.id}
+                      aria-label={`Column id ${col.name}`}
+                      onBlur={(e) => commitColumnId(col.id, e.target.value, e.target)}
+                    />
                   </td>
                   <td>
                     <input value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} />
@@ -207,15 +242,40 @@ export function DataWorkspace() {
                   <td>
                     <select
                       value={col.type}
-                      onChange={(e) =>
-                        updateColumn(col.id, { type: e.target.value as DatasetColumn['type'] })
-                      }
+                      onChange={(e) => {
+                        const t = e.target.value as DatasetColumn['type']
+                        const patch: Partial<DatasetColumn> = { type: t }
+                        if (t === 'categorical') {
+                          if (!col.categories?.length) patch.categories = defaultCategories()
+                        } else {
+                          patch.categories = undefined
+                        }
+                        updateColumn(col.id, patch)
+                      }}
                     >
                       <option value="numeric">numeric</option>
                       <option value="binary">binary</option>
                       <option value="ordinal">ordinal</option>
                       <option value="categorical">categorical</option>
                     </select>
+                  </td>
+                  <td>
+                    {col.type === 'categorical' ? (
+                      <textarea
+                        className={styles.categoriesTextarea}
+                        rows={2}
+                        aria-label={`Categories for ${col.name}`}
+                        value={(col.categories ?? []).join('\n')}
+                        onChange={(e) => {
+                          const cats = e.target.value.split('\n').map((s) => s.trim()).filter(Boolean)
+                          updateColumn(col.id, {
+                            categories: cats.length ? cats : defaultCategories(),
+                          })
+                        }}
+                      />
+                    ) : (
+                      <span className={styles.mutedDash}>—</span>
+                    )}
                   </td>
                   <td>
                     <select
@@ -266,8 +326,10 @@ export function DataWorkspace() {
       <section className={styles.card}>
         <h3>Synthetic cohort generator</h3>
         <p className={styles.help}>
-          Set target cohort size here (X patients). Use <strong>Cohort scenario</strong> above for clinical themes and
-          mixes, then click <strong>Generate X synthetic patients</strong> or enable live preview.
+          The preview below refreshes automatically when you change the dataset schema, patient count, seed, or cohort
+          scenario (debounced). Use <strong>Generate / refresh synthetic rows</strong> or{' '}
+          <strong>Generate … synthetic patients</strong> in Cohort scenario to explicitly regenerate and satisfy the
+          guided wizard; Live preview also satisfies that step when updates land.
         </p>
         <div className={styles.row}>
           <label className={styles.field}>
@@ -386,7 +448,9 @@ export function DataWorkspace() {
       </section>
 
       <section className={styles.card}>
-        <h3>Preview ({previewRows.length} of {generatedRows.length})</h3>
+        <h3>
+          Preview ({previewRows.length} of {generatedRows.length})
+        </h3>
         {summaries.length > 0 && (
           <div className={styles.summaryStrip}>
             <strong>Numeric snapshot</strong> (up to 5k rows):{' '}
