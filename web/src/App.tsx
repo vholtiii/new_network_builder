@@ -5,6 +5,7 @@ import { BuilderSidebar } from './components/BuilderSidebar'
 import { DataWorkspace } from './components/DataWorkspace'
 import { DisclaimerBanner } from './components/DisclaimerBanner'
 import { FeasibilityPanel } from './components/FeasibilityPanel'
+import { GuidedWizardBar } from './components/GuidedWizardBar'
 import { GlossaryDrawer } from './components/GlossaryDrawer'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { PresentationToolbar } from './components/PresentationToolbar'
@@ -35,6 +36,8 @@ export default function App() {
   const setBeginnerMode = useProjectStore((s) => s.setBeginnerMode)
   const presentationMode = useProjectStore((s) => s.presentationMode)
   const setPresentationMode = useProjectStore((s) => s.setPresentationMode)
+  const guidedWizardEnabled = useProjectStore((s) => s.guidedWizardEnabled)
+  const setGuidedWizardEnabled = useProjectStore((s) => s.setGuidedWizardEnabled)
 
   useEffect(() => {
     const root = document.documentElement
@@ -77,6 +80,7 @@ export default function App() {
         Skip to main content
       </a>
       <DisclaimerBanner />
+      <GuidedWizardBar />
       <header className="app-header">
         <div>
           <p className="eyebrow">BioBank Neural Network Builder</p>
@@ -96,6 +100,8 @@ export default function App() {
               type="button"
               className={tab === key ? 'tab active' : 'tab'}
               aria-current={tab === key ? 'page' : undefined}
+              disabled={guidedWizardEnabled}
+              title={guidedWizardEnabled ? 'Turn off Guided presentation steps to switch tabs freely' : undefined}
               onClick={() => setTab(key)}
             >
               {workspaceTabLabels[key]}
@@ -104,6 +110,14 @@ export default function App() {
         </nav>
         <div className="header-actions">
           <div className="header-toggles" role="group" aria-label="View options">
+            <button
+              type="button"
+              className="toggle-btn"
+              aria-pressed={guidedWizardEnabled}
+              onClick={() => setGuidedWizardEnabled(!guidedWizardEnabled)}
+            >
+              Guided presentation steps
+            </button>
             <button
               type="button"
               className="toggle-btn"

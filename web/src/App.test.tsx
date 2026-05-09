@@ -7,9 +7,15 @@ import { useProjectStore } from './store/projectStore'
 describe('App shell', () => {
   beforeEach(() => {
     localStorage.removeItem('bb-beginner-mode')
+    localStorage.removeItem('bb-guided-wizard')
     useProjectStore.setState({
       beginnerMode: false,
       presentationMode: false,
+      guidedWizardEnabled: false,
+      wizardStepIndex: 0,
+      cohortGenerateAck: false,
+      hiddenStackPresetApplied: false,
+      feasibilityReviewAck: false,
       tab: 'builder',
     })
   })

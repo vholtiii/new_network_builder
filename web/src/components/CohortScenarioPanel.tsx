@@ -65,6 +65,7 @@ export function CohortScenarioPanel() {
     const settings = useProjectStore.getState().project.generationSettings
     const ds = useProjectStore.getState().project.datasetSchema
     useProjectStore.getState().setGeneratedRows(generateSyntheticRows(ds, settings))
+    useProjectStore.getState().acknowledgeCohortGeneration()
   }
 
   return (

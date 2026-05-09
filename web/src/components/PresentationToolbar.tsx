@@ -10,6 +10,8 @@ import styles from './PresentationToolbar.module.css'
 
 export function PresentationToolbar({ diagramRef }: { diagramRef: RefObject<HTMLDivElement | null> }) {
   const beginnerMode = useProjectStore((s) => s.beginnerMode)
+  const guidedWizardEnabled = useProjectStore((s) => s.guidedWizardEnabled)
+  const wizardStepIndex = useProjectStore((s) => s.wizardStepIndex)
   const project = useProjectStore((s) => s.project)
   const updateTheme = useProjectStore((s) => s.updateTheme)
   const [busy, setBusy] = useState(false)
@@ -57,6 +59,17 @@ export function PresentationToolbar({ diagramRef }: { diagramRef: RefObject<HTML
   return (
     <section className={styles.wrap}>
       <h3>Presentation export</h3>
+      {guidedWizardEnabled && wizardStepIndex === 4 && (
+        <div className={styles.wizardFeasibility}>
+          <h4>Feasibility snapshot</h4>
+          <p className={styles.wizardFeasibilityScore}>
+            Score: {feasibility.score}/100 ({feasibility.tier})
+          </p>
+          <p className={styles.wizardFeasibilityHint}>
+            {(feasibility.summary.split('\n')[0] || '—').trim()}
+          </p>
+        </div>
+      )}
       {beginnerMode && (
         <p className={styles.helper}>
           Use this tab when you want slides-ready assets: freeze the diagram as PNG/PDF and download a short Markdown

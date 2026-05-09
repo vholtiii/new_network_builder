@@ -1,12 +1,28 @@
 import { create } from 'zustand'
 import { createDefaultProject } from '../domain/defaultProject'
 import type { DatasetSchema } from '../domain/datasetSchema'
+import {
+  applyHiddenStackPreset as replaceHiddenStackFromPreset,
+  type HiddenStackPresetId,
+  wizardStepTab,
+  WIZARD_STEP_COUNT,
+  type WizardStepIndex,
+} from '../domain/guidedWizard'
 import type { Layer } from '../domain/networkGraph'
 import { parseProjectFile, type CohortScenario, type ProjectFile } from '../domain/projectFile'
 import type { SyntheticRow } from '../domain/synthetic'
 import type { OutcomeRow } from '../domain/simulator'
 
 const BEGINNER_MODE_STORAGE_KEY = 'bb-beginner-mode'
+const GUIDED_WIZARD_STORAGE_KEY = 'bb-guided-wizard'
+
+function readGuidedWizardEnabledFromStorage(): boolean {
+  try {
+    return localStorage.getItem(GUIDED_WIZARD_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
 
 function readBeginnerModeFromStorage(): boolean {
   try {
@@ -21,6 +37,8 @@ function readBeginnerModeFromStorage(): boolean {
 
 export type WorkspaceTab = 'builder' | 'data' | 'results' | 'present'
 
+export type { WizardStepIndex } from '../domain/guidedWizard'
+
 type ProjectState = {
   project: ProjectFile
   tab: WorkspaceTab
@@ -31,6 +49,11 @@ type ProjectState = {
   presentationMode: boolean
   beginnerMode: boolean
   predictionsAcknowledged: boolean
+  guidedWizardEnabled: boolean
+  wizardStepIndex: WizardStepIndex
+  cohortGenerateAck: boolean
+  hiddenStackPresetApplied: boolean
+  feasibilityReviewAck: boolean
   setTab: (tab: WorkspaceTab) => void
   setProject: (project: ProjectFile) => void
   importFromJsonText: (json: string) => void
@@ -57,6 +80,13 @@ type ProjectState = {
   setPresentationMode: (v: boolean) => void
   setBeginnerMode: (v: boolean) => void
   acknowledgePredictions: () => void
+  setGuidedWizardEnabled: (enabled: boolean) => void
+  setWizardStepIndex: (idx: WizardStepIndex) => void
+  advanceWizardStep: () => void
+  retreatWizardStep: () => void
+  acknowledgeCohortGeneration: () => void
+  setFeasibilityReviewAck: (v: boolean) => void
+  applyWizardHiddenPreset: (presetId: HiddenStackPresetId) => void
 }
 
 function insertBeforeOutput(layers: Layer[], layer: Layer): Layer[] {
@@ -69,7 +99,7 @@ function insertBeforeOutput(layers: Layer[], layer: Layer): Layer[] {
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   project: createDefaultProject(),
-  tab: 'builder',
+  tab: readGuidedWizardEnabledFromStorage() ? wizardStepTab(0) : 'builder',
   selectedLayerId: null,
   generatedRows: [],
   outcomes: [],
@@ -77,6 +107,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   presentationMode: false,
   beginnerMode: readBeginnerModeFromStorage(),
   predictionsAcknowledged: false,
+  guidedWizardEnabled: readGuidedWizardEnabledFromStorage(),
+  wizardStepIndex: 0,
+  cohortGenerateAck: false,
+  hiddenStackPresetApplied: false,
+  feasibilityReviewAck: false,
 
   setTab: (tab) => set({ tab }),
 
@@ -84,7 +119,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   importFromJsonText: (json) => {
     const parsed = parseProjectFile(JSON.parse(json))
-    set({ project: parsed, generatedRows: [], outcomes: [] })
+    set((state) => ({
+      project: parsed,
+      generatedRows: [],
+      outcomes: [],
+      cohortGenerateAck: false,
+      hiddenStackPresetApplied: false,
+      feasibilityReviewAck: false,
+      tab: state.guidedWizardEnabled ? wizardStepTab(state.wizardStepIndex) : state.tab,
+    }))
   },
 
   exportProjectJson: () => JSON.stringify(get().project, null, 2),
@@ -334,4 +377,63 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   acknowledgePredictions: () => set({ predictionsAcknowledged: true }),
+
+  setGuidedWizardEnabled: (enabled) => {
+    try {
+      localStorage.setItem(GUIDED_WIZARD_STORAGE_KEY, String(enabled))
+    } catch {
+      /* ignore */
+    }
+    if (enabled) {
+      set({
+        guidedWizardEnabled: true,
+        wizardStepIndex: 0,
+        tab: wizardStepTab(0),
+        cohortGenerateAck: false,
+        hiddenStackPresetApplied: false,
+        feasibilityReviewAck: false,
+      })
+    } else {
+      set({ guidedWizardEnabled: false })
+    }
+  },
+
+  setWizardStepIndex: (idx) => {
+    const clamped = Math.max(0, Math.min(WIZARD_STEP_COUNT - 1, idx)) as WizardStepIndex
+    set({ wizardStepIndex: clamped, tab: wizardStepTab(clamped) })
+  },
+
+  advanceWizardStep: () => {
+    const s = get()
+    if (!s.guidedWizardEnabled) return
+    const next = Math.min(WIZARD_STEP_COUNT - 1, s.wizardStepIndex + 1) as WizardStepIndex
+    set({ wizardStepIndex: next, tab: wizardStepTab(next) })
+  },
+
+  retreatWizardStep: () => {
+    const s = get()
+    if (!s.guidedWizardEnabled) return
+    const prev = Math.max(0, s.wizardStepIndex - 1) as WizardStepIndex
+    set({ wizardStepIndex: prev, tab: wizardStepTab(prev) })
+  },
+
+  acknowledgeCohortGeneration: () => set({ cohortGenerateAck: true }),
+
+  setFeasibilityReviewAck: (feasibilityReviewAck) => set({ feasibilityReviewAck }),
+
+  applyWizardHiddenPreset: (presetId) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        network: {
+          ...state.project.network,
+          layers: replaceHiddenStackFromPreset(
+            state.project.network.layers,
+            presetId,
+            () => crypto.randomUUID(),
+          ),
+        },
+      },
+      hiddenStackPresetApplied: true,
+    })),
 }))

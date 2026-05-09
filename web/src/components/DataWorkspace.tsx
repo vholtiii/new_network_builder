@@ -64,6 +64,7 @@ export function DataWorkspace() {
   const updateGeneration = useProjectStore((s) => s.updateGeneration)
   const updateDeclarations = useProjectStore((s) => s.updateDeclarations)
   const setGeneratedRows = useProjectStore((s) => s.setGeneratedRows)
+  const acknowledgeCohortGeneration = useProjectStore((s) => s.acknowledgeCohortGeneration)
   const generatedRows = useProjectStore((s) => s.generatedRows)
 
   const schema = project.datasetSchema
@@ -84,9 +85,10 @@ export function DataWorkspace() {
 
   const schemaSig = useMemo(() => JSON.stringify(schema.columns), [schema.columns])
 
-  const regenerate = () => {
+  const regenerate = (acknowledge = false) => {
     const rows = generateSyntheticRows(schema, gen)
     setGeneratedRows(rows)
+    if (acknowledge) acknowledgeCohortGeneration()
   }
 
   useEffect(() => {
@@ -98,9 +100,10 @@ export function DataWorkspace() {
     if (!gen.livePreview) return
     const t = window.setTimeout(() => {
       setGeneratedRows(generateSyntheticRows(schema, gen))
+      acknowledgeCohortGeneration()
     }, 350)
     return () => window.clearTimeout(t)
-  }, [gen.livePreview, genSig, schemaSig, schema, gen, setGeneratedRows])
+  }, [gen.livePreview, genSig, schemaSig, schema, gen, setGeneratedRows, acknowledgeCohortGeneration])
 
   const addColumn = () => {
     const id = `col_${crypto.randomUUID().slice(0, 8)}`
@@ -138,6 +141,7 @@ export function DataWorkspace() {
     const rows = coerceImportedRows(schema, parsed.rows)
     setGeneratedRows(rows)
     updateGeneration({ rowCount: rows.length })
+    acknowledgeCohortGeneration()
   }
 
   const previewRows = generatedRows.slice(0, 25)
@@ -328,7 +332,7 @@ export function DataWorkspace() {
           />
         </label>
         <div className={styles.actions}>
-          <button type="button" onClick={regenerate}>
+          <button type="button" onClick={() => regenerate(true)}>
             Generate / refresh synthetic rows
           </button>
           <button
@@ -373,6 +377,7 @@ export function DataWorkspace() {
               const next = [...generatedRows, appended]
               setGeneratedRows(next)
               updateGeneration({ rowCount: next.length })
+              acknowledgeCohortGeneration()
             }}
           >
             Append single synthetic row

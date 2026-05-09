@@ -37,6 +37,20 @@ Use the workspace tabs at the top in roughly this order:
 
 **Tip:** In the header, turn on **Beginner explanations** while learning, and open **Open glossary** whenever a word is unclear.
 
+### Guided presentation steps (optional)
+
+Turn on **Guided presentation steps** in the header for a **linear 5-step flow** with **Next / Back**. Workspace tabs are locked while guided mode is on—use the step buttons to move between sections.
+
+| Step | Requirements to continue |
+|------|-------------------------|
+| 1 | Architecture title, patient count ≥ 1, at least one dataset column |
+| 2 | Generate cohort rows (Generate buttons, CSV paste, append row, or Live preview refresh) |
+| 3 | Input scalars selected; every categorical column has an embedding |
+| 4 | Apply a hidden-layer preset **or** keep at least one Dense layer before the output |
+| 5 | Review the feasibility snapshot on the Presentation tab and tick the confirmation checkbox |
+
+Turn guided mode **off** anytime to use free tab navigation again.
+
 ---
 
 ## 3. Plain English cheat sheet
