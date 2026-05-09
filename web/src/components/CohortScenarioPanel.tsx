@@ -27,6 +27,14 @@ function hasRelapseColumn(schema: DatasetSchema): boolean {
   )
 }
 
+function hasBinarySexColumn(schema: DatasetSchema): boolean {
+  return schema.columns.some((c) => {
+    if (c.type !== 'binary') return false
+    if (c.syntheticRole === 'sex') return true
+    return c.group === 'demographics' && `${c.name} ${c.id}`.toLowerCase().includes('sex')
+  })
+}
+
 export function CohortScenarioPanel() {
   const schema = useProjectStore((s) => s.project.datasetSchema)
   const gen = useProjectStore((s) => s.project.generationSettings)
@@ -47,6 +55,7 @@ export function CohortScenarioPanel() {
       ageRange: { ...t.defaults.ageRange },
       treatmentPhaseWeights: t.defaults.treatmentPhaseWeights ? { ...t.defaults.treatmentPhaseWeights } : undefined,
       relapseProbability: t.defaults.relapseProbability,
+      sexPositiveProbability: t.defaults.sexPositiveProbability,
       labsIntensity: t.defaults.labsIntensity,
       mixStrictness: t.defaults.mixStrictness,
     })
@@ -137,6 +146,25 @@ export function CohortScenarioPanel() {
           />
           {!hasRelapseColumn(schema) && (
             <span className={styles.hint}>Add a binary column with Cohort role “Relapse” or “relapse” in the name.</span>
+          )}
+        </label>
+
+        <label className={styles.field}>
+          Sex = 1 probability (binary sex only, 0–1)
+          <input
+            type="number"
+            disabled={!hasBinarySexColumn(schema)}
+            step={0.05}
+            min={0}
+            max={1}
+            value={resolved.sexPositiveProbability}
+            onChange={(e) => updateCohortScenario({ sexPositiveProbability: Number(e.target.value) })}
+          />
+          {!hasBinarySexColumn(schema) && (
+            <span className={styles.hint}>
+              Add a demographics binary sex column (Cohort role “Sex” or “sex” in the id/name), or use categorical sex
+              labels.
+            </span>
           )}
         </label>
 

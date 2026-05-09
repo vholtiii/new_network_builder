@@ -26,7 +26,7 @@ export function CategoricalInputRouting({ dataset }: { dataset: DatasetSchema })
       <div className={styles.wrap}>
         <h4 className={styles.title}>Categorical inputs</h4>
         <p className={styles.help}>
-          No categorical columns in the schema. Add columns typed as <strong>categorical</strong> under Synthetic data to
+          No categorical columns in the schema. Add columns typed as <strong>categorical</strong> under Cohort builder to
           route them through embedding layers.
         </p>
         {beginnerMode && (

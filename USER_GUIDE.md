@@ -29,7 +29,7 @@ Use the workspace tabs at the top in roughly this order:
 
 | Step | Tab | What you do |
 |------|-----|----------------|
-| A | **Synthetic data** | Define or load columns (types and groups). Optionally set **Cohort role** and use **Cohort scenario** + **Generate X synthetic patients** for fake rows. Set **seed** and patient count in **Synthetic cohort generator**. |
+| A | **Cohort builder** | Use **Presentation cohort** for age, sex, site, phases, and relapse toggles. Define or load columns in **Dataset schema**. Set **Cohort role** if needed; **Cohort scenario** + **Generate X synthetic patients** for fake rows; **seed** and count in **Synthetic cohort generator**. |
 | B | **Model builder** | Under **Features that feed the Input node**, check numeric/binary/ordinal columns you want as inputs. Under **Categorical inputs**, add an **Embedding** for each categorical column. Use **+ Dense**, **+ Dropout**, etc., to build layers above the output. |
 | C | (same tab) | Click layers on the **diagram** on the right. Hover **Input** to see which scalar features are wired. |
 | D | (same tab) | Read **Feasibility screening** (turn on **Beginner explanations** for plain-language notes first). |
@@ -46,9 +46,9 @@ Everyday language mapped to what you click (not clinical guidance):
 | Say this | Click this |
 |----------|------------|
 | Spreadsheet-style numbers as model inputs (“scalars”) | **Model builder → Features that feed the Input node** (numeric, binary, ordinal) |
-| Pick-list columns (site, phase, etc.) | **Synthetic data:** type **categorical**. **Model builder → Categorical inputs → Add embedding** |
+| Pick-list columns (site, phase, etc.) | **Cohort builder:** type **categorical**. **Model builder → Categorical inputs → Add embedding** |
 | “How wide is this layer?” | Numbers on diagram arrows (for example **10→32**) |
-| Fake patients without real PHI | **Synthetic data:** cohort scenario + generator |
+| Fake patients without real PHI | **Cohort builder:** Presentation cohort + cohort scenario + generator |
 | Same fake data again | Same **seed** |
 | Sanity check: model size vs cohort | **Feasibility screening** |
 | Demo scores (not a trained model) | **Mock outcomes** |
@@ -96,13 +96,14 @@ The red/black banner at the top of the app repeats this in short form.
 - **Layer palette (`+ Dense`, `+ Dropout`, …):** Adds layers **above** the fixed output. Hover each button for a short hint.
 - **Features that feed the Input node:** Choose **numeric**, **binary**, and **ordinal** columns that feed the **Input** node. Fields are **grouped** (demographics, labs, treatment phase, …).
 - **Categorical inputs:** Each **categorical** column needs an **Embedding** in the stack. The UI shows **In network** or **Add embedding**.
-- Link from the scalar checklist jumps to **Synthetic data** when you need new columns or groups.
+- Link from the scalar checklist jumps to **Cohort builder** when you need new columns or groups.
 - **Visual forward-pass scrubber:** Highlights forward flow on the diagram (visual only).
 - **Feasibility screening:** Score and warnings. With **Beginner explanations**, you get intro text and an expandable **Technical summary**.
 
-### Synthetic data
+### Cohort builder
 
-- **Cohort scenario:** Pick a **clinical theme**, tune age band, relapse probability (needs a matching binary column), **labs intensity**, **treatment phase weights**, and **soft vs stratified** mixing. **Generate X synthetic patients** uses the count **X** from the generator section. **Live preview** optionally refreshes rows after edits (debounced).
+- **Presentation cohort:** Toggle slide-friendly fields (age, sex, site / center, treatment phases, relapse). Stable column ids sync with the generator; **Suggest model wiring** adds scalars and embeddings on the diagram when those columns exist.
+- **Cohort scenario:** Pick a **clinical theme**, tune age band, **relapse probability**, **sex = 1 probability** (binary sex columns only), **labs intensity**, **treatment phase weights**, and **soft vs stratified** mixing. **Generate X synthetic patients** uses the count **X** from the generator section. **Live preview** optionally refreshes rows after edits (debounced).
 - **Cohort role:** In the schema table, tag **Age**, **Treatment phase**, **Relapse**, or **Site** so themes line up without renaming column ids.
 - **Dataset schema:** Columns have **id**, **name**, **type**, and **group** (used to organize Model builder).
 - **Synthetic cohort generator:** **Seed**, **exact patient count**, presets, and **Declared sample size** for feasibility.
@@ -117,14 +118,14 @@ The red/black banner at the top of the app repeats this in short form.
 ### Presentation
 
 - Download **PNG** or **PDF** of the diagram.
-- Download a **Markdown summary**.
+- Download a **Markdown summary** (includes a **Cohort story** section you can paste into slides).
 - Adjust **theme colors** for the whole app shell.
 
 ---
 
 ## 7. Wiring inputs (one-minute recap)
 
-1. **Synthetic data:** Set column **types**. Numeric/binary/ordinal → wire as scalars on Model builder. **Categorical** → use **embeddings**.
+1. **Cohort builder:** Set column **types**. Numeric/binary/ordinal → wire as scalars on Model builder. **Categorical** → use **embeddings**.
 2. **Model builder:** **Features that feed the Input node** for scalars; **Categorical inputs** for embeddings.
 3. **Diagram:** Hover **Input** to see scalar feature names.
 

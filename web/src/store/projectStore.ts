@@ -39,6 +39,8 @@ type ProjectState = {
   updateDeclarations: (partial: Partial<ProjectFile['feasibilityDeclarations']>) => void
   updateGeneration: (partial: Partial<ProjectFile['generationSettings']>) => void
   updateCohortScenario: (partial: Partial<CohortScenario>) => void
+  replaceTreatmentPhaseWeights: (weights: Record<string, number>) => void
+  suggestPresentationModelWiring: () => void
   updateTheme: (partial: Partial<ProjectFile['themeTokens']>) => void
   updateTraining: (partial: NonNullable<ProjectFile['training']>) => void
   toggleAiAssist: (enabled: boolean) => void
@@ -155,6 +157,65 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             ...state.project.generationSettings,
             cohortScenario: merged,
           },
+        },
+      }
+    }),
+
+  replaceTreatmentPhaseWeights: (treatmentPhaseWeights) =>
+    set((state) => ({
+      project: {
+        ...state.project,
+        generationSettings: {
+          ...state.project.generationSettings,
+          cohortScenario: {
+            ...(state.project.generationSettings.cohortScenario ?? {}),
+            treatmentPhaseWeights: { ...treatmentPhaseWeights },
+          },
+        },
+      },
+    })),
+
+  suggestPresentationModelWiring: () =>
+    set((state) => {
+      const schema = state.project.datasetSchema
+      let layers = [...state.project.network.layers]
+      const inIdx = layers.findIndex((l) => l.type === 'input')
+      if (inIdx === -1) return state
+      const inp = layers[inIdx] as Extract<Layer, { type: 'input' }>
+      const presentationScalars = ['age', 'sex', 'relapse_flag'].filter((id) =>
+        schema.columns.some(
+          (c) =>
+            c.id === id &&
+            (c.type === 'numeric' || c.type === 'binary' || c.type === 'ordinal'),
+        ),
+      )
+      const scalarColumnIds = [...new Set([...inp.scalarColumnIds, ...presentationScalars])].filter((id) =>
+        schema.columns.some(
+          (c) =>
+            c.id === id &&
+            (c.type === 'numeric' || c.type === 'binary' || c.type === 'ordinal'),
+        ),
+      )
+      if (scalarColumnIds.length === 0) return state
+      layers[inIdx] = { ...inp, scalarColumnIds }
+
+      for (const colId of ['cohort_site', 'tx_phase'] as const) {
+        const col = schema.columns.find((c) => c.id === colId && c.type === 'categorical')
+        if (!col) continue
+        const hasEmb = layers.some((l) => l.type === 'embedding' && l.schemaColumnId === colId)
+        if (!hasEmb) {
+          layers = insertBeforeOutput(layers, {
+            id: crypto.randomUUID(),
+            type: 'embedding',
+            schemaColumnId: colId,
+            embeddingDim: 8,
+          })
+        }
+      }
+      return {
+        project: {
+          ...state.project,
+          network: { ...state.project.network, layers },
         },
       }
     }),

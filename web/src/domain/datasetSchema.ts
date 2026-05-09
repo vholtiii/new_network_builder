@@ -16,7 +16,13 @@ export const featureGroupSchema = z.enum([
 
 export const columnTypeSchema = z.enum(['numeric', 'categorical', 'binary', 'ordinal'])
 
-export const syntheticRoleEnumSchema = z.enum(['age', 'treatment_phase', 'relapse_or_recurrence', 'site_or_center'])
+export const syntheticRoleEnumSchema = z.enum([
+  'age',
+  'sex',
+  'treatment_phase',
+  'relapse_or_recurrence',
+  'site_or_center',
+])
 
 export const syntheticRoleSchema = syntheticRoleEnumSchema.optional()
 

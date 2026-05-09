@@ -5,6 +5,7 @@ export type ScenarioDefaults = {
   ageRange: { min: number; max: number }
   treatmentPhaseWeights?: Record<string, number>
   relapseProbability?: number
+  sexPositiveProbability?: number
   labsIntensity: 'low' | 'neutral' | 'high'
   mixStrictness: 'soft' | 'stratified'
 }
@@ -93,6 +94,7 @@ export function mergeScenarioWithTheme(
 ): Required<Pick<ScenarioDefaults, 'ageRange' | 'labsIntensity' | 'mixStrictness'>> & {
   treatmentPhaseWeights: Record<string, number>
   relapseProbability: number
+  sexPositiveProbability: number
 } {
   const theme = (themeId ? getClinicalTheme(themeId) : undefined) ?? getClinicalTheme('balanced_general')!
   const d = theme.defaults
@@ -108,6 +110,7 @@ export function mergeScenarioWithTheme(
         ? mergedWeights
         : fallbackWeights,
     relapseProbability: saved?.relapseProbability ?? d.relapseProbability ?? 0.25,
+    sexPositiveProbability: saved?.sexPositiveProbability ?? d.sexPositiveProbability ?? 0.5,
     labsIntensity: saved?.labsIntensity ?? d.labsIntensity,
     mixStrictness: saved?.mixStrictness ?? d.mixStrictness,
   }

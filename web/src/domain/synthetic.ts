@@ -82,6 +82,13 @@ function isRelapseColumn(col: DatasetColumn): boolean {
   return s.includes('relapse')
 }
 
+function isSexColumn(col: DatasetColumn): boolean {
+  if (col.syntheticRole === 'sex') return true
+  if (col.type !== 'binary' || col.group !== 'demographics') return false
+  const s = `${col.name} ${col.id}`.toLowerCase()
+  return s.includes('sex')
+}
+
 function findTreatmentPhaseColumn(columns: DatasetColumn[]): DatasetColumn | undefined {
   const role = columns.find((c) => c.syntheticRole === 'treatment_phase')
   if (role && role.type === 'categorical') return role
@@ -113,6 +120,11 @@ function synthCell(column: DatasetColumn, rng: () => number, ctx: SynthCtx): str
     const cats = column.categories ?? ['A', 'B', 'C']
     const w = normalizePhaseWeights(cats, ctx.resolved.treatmentPhaseWeights)
     return pickWeightedCategory(rng, cats, w)
+  }
+
+  if (column.type === 'binary' && isSexColumn(column)) {
+    const p = ctx.resolved.sexPositiveProbability
+    return rng() < p ? 1 : 0
   }
 
   if (column.type === 'binary' && isRelapseColumn(column)) {

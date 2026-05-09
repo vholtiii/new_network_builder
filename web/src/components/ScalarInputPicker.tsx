@@ -83,12 +83,12 @@ export function ScalarInputPicker({ dataset }: { dataset: DatasetSchema }) {
           onClick={() => setTab('data')}
           aria-label="Open dataset schema editor tab"
         >
-          Synthetic data
+          Cohort builder
         </button>{' '}
         tab.
       </p>
       {eligible.length === 0 ? (
-        <p className={styles.empty}>No numeric, binary, or ordinal columns yet—define them under Synthetic data.</p>
+        <p className={styles.empty}>No numeric, binary, or ordinal columns yet—define them under Cohort builder.</p>
       ) : (
         FEATURE_GROUP_VALUES.map((group) => {
           const cols = grouped.get(group) ?? []

@@ -51,7 +51,7 @@ describe('App shell', () => {
   it('marks the active workspace tab with aria-current=page', () => {
     render(<App />)
     const builder = screen.getByRole('button', { name: /Model builder/i })
-    const data = screen.getByRole('button', { name: /Synthetic data/i })
+    const data = screen.getByRole('button', { name: /Cohort builder/i })
     expect(builder).toHaveAttribute('aria-current', 'page')
     expect(data).not.toHaveAttribute('aria-current')
   })

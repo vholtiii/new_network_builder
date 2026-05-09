@@ -13,6 +13,7 @@ import { templates } from '../domain/templates'
 import { useProjectStore } from '../store/projectStore'
 import { downloadText } from '../utils/download'
 import { CohortScenarioPanel } from './CohortScenarioPanel'
+import { PresentationCohortBuilder } from './PresentationCohortBuilder'
 import styles from './DataWorkspace.module.css'
 
 const rowPresets = [10, 100, 500, 1000, 5000, 10_000]
@@ -20,6 +21,7 @@ const rowPresets = [10, 100, 500, 1000, 5000, 10_000]
 const SYNTHETIC_ROLE_OPTIONS: { value: '' | SyntheticRole; label: string }[] = [
   { value: '', label: '(none)' },
   { value: 'age', label: 'Age' },
+  { value: 'sex', label: 'Sex' },
   { value: 'treatment_phase', label: 'Treatment phase' },
   { value: 'relapse_or_recurrence', label: 'Relapse / recurrence' },
   { value: 'site_or_center', label: 'Site / center' },
@@ -154,6 +156,7 @@ export function DataWorkspace() {
 
   return (
     <div className={styles.wrap}>
+      <PresentationCohortBuilder />
       <CohortScenarioPanel />
 
       <section className={styles.card}>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import minimal from '../__fixtures__/minimal-project.json'
 import { parseCsvPaste, rowsToCsv } from '../domain/csv'
-import { generateSyntheticRows } from '../domain/synthetic'
+import { generateSyntheticRows, type SyntheticRow } from '../domain/synthetic'
 import { parseProjectFile } from '../domain/projectFile'
 
 describe('synthetic + csv', () => {
@@ -37,6 +37,37 @@ describe('synthetic + csv', () => {
       expect(age).toBeGreaterThanOrEqual(25)
       expect(age).toBeLessThanOrEqual(35)
     }
+  })
+
+  it('binary sex column respects sexPositiveProbability', () => {
+    const project = parseProjectFile(minimal)
+    const schema = {
+      ...project.datasetSchema,
+      columns: [
+        ...project.datasetSchema.columns,
+        {
+          id: 'sex',
+          name: 'Sex',
+          type: 'binary' as const,
+          group: 'demographics' as const,
+          syntheticRole: 'sex' as const,
+        },
+      ],
+    }
+    const hi = generateSyntheticRows(schema, {
+      ...project.generationSettings,
+      rowCount: 2000,
+      cohortScenario: { sexPositiveProbability: 0.95 },
+    })
+    const lo = generateSyntheticRows(schema, {
+      ...project.generationSettings,
+      rowCount: 2000,
+      cohortScenario: { sexPositiveProbability: 0.05 },
+    })
+    const mean = (rows: SyntheticRow[]) =>
+      rows.reduce((s, r) => s + Number(r.sex), 0) / rows.length
+    expect(mean(hi)).toBeGreaterThan(0.7)
+    expect(mean(lo)).toBeLessThan(0.3)
   })
 
   it('stratified phase mix assigns only known categories', () => {

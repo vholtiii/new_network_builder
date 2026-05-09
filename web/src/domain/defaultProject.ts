@@ -7,6 +7,7 @@ export function createDefaultProject(): ProjectFile {
       description: 'Editable BioBank-style starter schema',
       columns: [
         { id: 'age', name: 'Age (years)', type: 'numeric', group: 'demographics', syntheticRole: 'age' },
+        { id: 'sex', name: 'Sex (coded)', type: 'binary', group: 'demographics', syntheticRole: 'sex' },
         { id: 'lab_alt', name: 'ALT', type: 'numeric', group: 'labs' },
         {
           id: 'cohort_site',
@@ -42,6 +43,7 @@ export function createDefaultProject(): ProjectFile {
         ageRange: { min: 18, max: 80 },
         treatmentPhaseWeights: { Induction: 1, Maintenance: 1, Relapse: 1 },
         relapseProbability: 0.25,
+        sexPositiveProbability: 0.5,
         labsIntensity: 'neutral',
         mixStrictness: 'soft',
       },
@@ -69,7 +71,7 @@ export function createDefaultProject(): ProjectFile {
     network: {
       metadata: { name: 'Starter tabular MLP' },
       layers: [
-        { id: 'in', type: 'input', scalarColumnIds: ['age', 'lab_alt', 'relapse_flag'] },
+        { id: 'in', type: 'input', scalarColumnIds: ['age', 'sex', 'lab_alt', 'relapse_flag'] },
         { id: 'emb_site', type: 'embedding', schemaColumnId: 'cohort_site', embeddingDim: 8 },
         { id: 'emb_phase', type: 'embedding', schemaColumnId: 'tx_phase', embeddingDim: 8 },
         { id: 'd1', type: 'dense', units: 32 },

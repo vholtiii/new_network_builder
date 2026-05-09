@@ -1,8 +1,41 @@
 import type { DatasetSchema } from './datasetSchema'
+import { mergeScenarioWithTheme } from './clinicalThemes'
 import type { Layer } from './networkGraph'
 import type { FeasibilityDeclarations, ProjectFile } from './projectFile'
 import type { FeasibilityReport } from './feasibility'
 import { estimateParameterCount, propagateShapes } from './shape'
+
+export function buildCohortSlideBullets(project: ProjectFile): string {
+  const gs = project.generationSettings
+  const cs = gs.cohortScenario
+  const tid = cs?.activeThemeId ?? 'balanced_general'
+  const lines: string[] = []
+  lines.push('## Cohort story (slides)')
+  lines.push(`- Synthetic patients: **${gs.rowCount}**`)
+  lines.push(`- Seed: ${gs.seed} (same seed → same demo rows)`)
+  lines.push(`- Clinical theme: ${tid.replace(/_/g, ' ')}`)
+  const cols = project.datasetSchema.columns
+  const slotDefs: [string, (c: (typeof cols)[number]) => boolean][] = [
+    ['Age', (c) => c.syntheticRole === 'age' || c.id === 'age'],
+    ['Sex', (c) => c.syntheticRole === 'sex' || c.id === 'sex'],
+    ['Site / center', (c) => c.syntheticRole === 'site_or_center' || c.id === 'cohort_site'],
+    ['Treatment phase', (c) => c.syntheticRole === 'treatment_phase' || c.id === 'tx_phase'],
+    ['Relapse flag', (c) => c.syntheticRole === 'relapse_or_recurrence' || c.id === 'relapse_flag'],
+  ]
+  for (const [label, pred] of slotDefs) {
+    const c = cols.find(pred)
+    if (c) lines.push(`- ${label}: ${c.name} (${c.type})`)
+  }
+  if (cs?.ageRange) lines.push(`- Age band: ${cs.ageRange.min}–${cs.ageRange.max}`)
+  if (cs?.relapseProbability !== undefined) lines.push(`- Relapse probability (scenario): ${cs.relapseProbability}`)
+  const merged = mergeScenarioWithTheme(tid, cs)
+  if (cols.some((c) => c.type === 'binary' && c.syntheticRole === 'sex')) {
+    lines.push(`- Sex = 1 probability (binary): ${merged.sexPositiveProbability}`)
+  }
+  lines.push('')
+  lines.push('_Demo-only cohort description — not real patient data._')
+  return lines.join('\n')
+}
 
 export function buildImplementationSummary(project: ProjectFile, feasibility: FeasibilityReport): string {
   const lines: string[] = []
@@ -19,6 +52,8 @@ export function buildImplementationSummary(project: ProjectFile, feasibility: Fe
   lines.push('')
   lines.push(`## Declared cohort assumptions`)
   lines.push(formatDeclarations(project.feasibilityDeclarations))
+  lines.push('')
+  lines.push(buildCohortSlideBullets(project))
   lines.push('')
   lines.push(`## Dataset schema overview`)
   lines.push(formatDataset(project.datasetSchema))

@@ -16,6 +16,8 @@ export const cohortScenarioSchema = z.object({
   ageRange: z.object({ min: z.number(), max: z.number() }).optional(),
   treatmentPhaseWeights: z.record(z.string(), z.number()).optional(),
   relapseProbability: z.number().min(0).max(1).optional(),
+  /** Probability coded value is 1 for binary sex columns (presentation default 0.5). */
+  sexPositiveProbability: z.number().min(0).max(1).optional(),
   labsIntensity: z.enum(['low', 'neutral', 'high']).optional(),
   mixStrictness: z.enum(['soft', 'stratified']).optional(),
 })
